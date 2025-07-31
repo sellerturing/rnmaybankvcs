@@ -2,14 +2,14 @@ import RtmEngine from 'agora-react-native-rtm';
 import AgoraUIKit, { ConnectionData } from 'agora-rn-uikit';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Platform,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 // Configuration - Replace with your actual Agora credentials

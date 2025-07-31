@@ -1,5 +1,5 @@
-import RegisterScreen from "./register";
+import RegisterScreen from "./verification-info";
 
-export default function App() {
+export default function TabOneScreen() {
     return <RegisterScreen />;
 }

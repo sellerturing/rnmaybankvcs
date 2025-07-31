@@ -13,7 +13,7 @@ export default function RegisterScreen() {
     const [phone, setPhone] = useState("");
 
     const handleRegister = () => {
-        router.push("/VerificationIdentityCardScreen");
+        router.push("/verification-identity");
     };
 
     return (

@@ -28,28 +28,48 @@ export default function RootLayout() {
             <Stack>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen
-                    name="register"
+                    name="verification-info"
                     options={{
                         headerShown: false,
                         title: "",
                     }}
                 />
                 <Stack.Screen
-                    name="VerificationIdentityCardScreen"
+                    name="verification-identity"
                     options={{
                         headerShown: true,
                         title: "",
+                        headerStyle: {
+                            backgroundColor: 'transparent',
+                        },
+                        headerShadowVisible: false,
+                        headerTitleStyle: {
+                            color: '#2c3e50',
+                            fontSize: 18,
+                            fontWeight: '600',
+                        },
+                        headerTransparent: true,
                     }}
                 />
                 <Stack.Screen
-                    name="FaceRecognitionScreen"
+                    name="verification-face"
                     options={{
-                        headerShown: false,
+                        headerShown: true,
                         title: "",
+                        headerStyle: {
+                            backgroundColor: 'transparent',
+                        },
+                        headerShadowVisible: false,
+                        headerTitleStyle: {
+                            color: '#2c3e50',
+                            fontSize: 18,
+                            fontWeight: '600',
+                        },
+                        headerTransparent: true,
                     }}
                 />
                 <Stack.Screen
-                    name="AgoraVideoCall2Screen"
+                    name="verification-video-call"
                     options={{
                         headerShown: false,
                     }}
