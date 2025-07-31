@@ -53,10 +53,7 @@ const AgoraVideoCall2 = () => {
       }
       if (rtmEngine.current) {
         await rtmEngine.current.logout();
-        // Check if destroy method exists before calling it
-        if (typeof rtmEngine.current.destroy === 'function') {
-          rtmEngine.current.destroy();
-        }
+        // No destroy method on RtmEngine; nothing to call here
       }
     } catch (error) {
       console.log('RTM cleanup error (non-critical):', error);
@@ -72,49 +69,11 @@ const AgoraVideoCall2 = () => {
     }
   };
 
-  const initRTM = async () => {
-    try {
-      if (agoraConfig.appId === 'YOUR_AGORA_APP_ID') {
-        Alert.alert('Configuration Required', 'Please replace YOUR_AGORA_APP_ID with your actual Agora App ID');
-        return;
-      }
-
-      rtmEngine.current = new RtmEngine();
-      await rtmEngine.current.createInstance(agoraConfig.appId);
-
-      // Login to RTM
-      const rtmUid = `user_${Date.now()}`;
-      await rtmEngine.current.login({ uid: rtmUid });
-
-      // Join RTM channel
-      await rtmEngine.current.joinChannel(channelInput);
-
-      // Listen for channel events
-      rtmEngine.current.addListener('ChannelMessageReceived', (evt: { channelId: string; uid: string; text: string }) => {
-        setMessages(prev => [...prev, `${evt.uid}: ${evt.text}`]);
-      });
-
-      rtmEngine.current.addListener('MemberJoined', (evt: { channelId: string; uid: string }) => {
-        setMessages(prev => [...prev, `${evt.uid} joined the chat`]);
-      });
-
-      rtmEngine.current.addListener('MemberLeft', (evt: { channelId: string; uid: string }) => {
-        setMessages(prev => [...prev, `${evt.uid} left the chat`]);
-      });
-
-      // Store channel name for sending messages
-      rtmChannel.current = channelInput;
-      
-    } catch (error) {
-      console.error('RTM initialization failed:', error);
-    }
-  };
-
   const connectionData: ConnectionData = {
     appId: appId,
     channel: channelInput,
-    token: token,
-    uid: agoraConfig.uid,
+    token,
+    // uid: agoraConfig.uid,
   };
 
   const callbacks = {
@@ -201,56 +160,6 @@ const AgoraVideoCall2 = () => {
       <AgoraUIKit
         connectionData={connectionData}
         rtcCallbacks={callbacks}
-        styleProps={{
-          theme: '#007bff',
-          videoMode: {
-            max: 4,
-            min: 1,
-          },
-          maxViewStyles: {
-            height: height * 0.7,
-            width: width,
-          },
-          minViewStyles: {
-            height: 150,
-            width: 120,
-          },
-          localBtnContainer: {
-            backgroundColor: 'rgba(0,0,0,0.3)',
-            borderRadius: 25,
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-            position: 'absolute',
-            bottom: 50,
-            alignSelf: 'center',
-          },
-          localBtnStyles: {
-            muteLocalAudio: {
-              backgroundColor: '#ff4444',
-              borderRadius: 25,
-              width: 50,
-              height: 50,
-            },
-            muteLocalVideo: {
-              backgroundColor: '#ff4444',
-              borderRadius: 25,
-              width: 50,
-              height: 50,
-            },
-            switchCamera: {
-              backgroundColor: '#007bff',
-              borderRadius: 25,
-              width: 50,
-              height: 50,
-            },
-            endCall: {
-              backgroundColor: '#ff0000',
-              borderRadius: 25,
-              width: 60,
-              height: 60,
-            },
-          },
-        }}
       />
       
       {/* Channel Info Overlay */}

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  Dimensions,
   PermissionsAndroid,
   Platform,
   StyleSheet,
@@ -15,15 +14,14 @@ import {
   RtcEngine,
   RtcLocalView,
   RtcRemoteView,
-  VideoRenderMode,
+  VideoRenderMode
 } from 'react-native-agora';
 
-const { width, height } = Dimensions.get('window');
-
+/** @deprecated use AgoraVideoCall2 instead */
 const AgoraVideoCall = () => {
-  const [engine, setEngine] = useState(null);
+  const [engine, setEngine] = useState<RtcEngine | null>(null);
   const [joined, setJoined] = useState(false);
-  const [remoteUid, setRemoteUid] = useState(null);
+  const [remoteUid, setRemoteUid] = useState<number | null>(null);
   const [localVideoEnabled, setLocalVideoEnabled] = useState(true);
   const [localAudioEnabled, setLocalAudioEnabled] = useState(true);
 
@@ -41,6 +39,7 @@ const AgoraVideoCall = () => {
         engine.destroy();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const requestPermissionsAndInit = async () => {
@@ -128,7 +127,11 @@ const AgoraVideoCall = () => {
       }
     } catch (error) {
       console.error('Error requesting permissions:', error);
-      Alert.alert('Permission Error', `Failed to request permissions: ${error.message}`);
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      Alert.alert('Permission Error', `Failed to request permissions: ${errorMessage}`);
     }
   };
 
@@ -152,20 +155,23 @@ const AgoraVideoCall = () => {
       console.log('RtcEngine created successfully');
       
       // Add event listeners first
-      rtcEngine.addListener('UserJoined', (uid) => {
+      rtcEngine.addListener('UserJoined', (uid: number) => {
         console.log('UserJoined', uid);
         setRemoteUid(uid);
       });
 
-      rtcEngine.addListener('UserOffline', (uid) => {
+      rtcEngine.addListener('UserOffline', (uid: number) => {
         console.log('UserOffline', uid);
         setRemoteUid(null);
       });
 
-      rtcEngine.addListener('JoinChannelSuccess', (channel, uid) => {
-        console.log('JoinChannelSuccess', channel, uid);
-        setJoined(true);
-      });
+      rtcEngine.addListener(
+        'JoinChannelSuccess',
+        (channel: string, uid: number, elapsed?: number) => {
+          console.log('JoinChannelSuccess', channel, uid);
+          setJoined(true);
+        }
+      );
 
       rtcEngine.addListener('LeaveChannel', () => {
         console.log('LeaveChannel');
@@ -173,11 +179,11 @@ const AgoraVideoCall = () => {
         setRemoteUid(null);
       });
 
-      rtcEngine.addListener('Error', (error) => {
+      rtcEngine.addListener('Error', (error: { code: number; message: string }) => {
         console.log('Agora Error:', error);
       });
 
-      rtcEngine.addListener('Warning', (warning) => {
+      rtcEngine.addListener('Warning', (warning: number) => {
         console.log('Agora Warning:', warning);
       });
 
@@ -197,12 +203,21 @@ const AgoraVideoCall = () => {
       console.log('Agora initialization completed successfully');
     } catch (error) {
       console.error('Error initializing Agora:', error);
-      console.error('Error details:', error.message);
-      console.error('Error code:', error.code);
-      Alert.alert(
-        'Agora Initialization Error', 
-        `${error.message}\n\nPlease verify:\n1. APP_ID is correct and active\n2. Project has Agora services enabled\n3. Network connectivity is working\n\nCurrent APP_ID: ${APP_ID.substring(0, 8)}...`
-      );
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        // @ts-ignore
+        console.error('Error code:', (error as any).code);
+        Alert.alert(
+          'Agora Initialization Error', 
+          `${error.message}\n\nPlease verify:\n1. APP_ID is correct and active\n2. Project has Agora services enabled\n3. Network connectivity is working\n\nCurrent APP_ID: ${APP_ID.substring(0, 8)}...`
+        );
+      } else {
+        console.error('Error details:', error);
+        Alert.alert(
+          'Agora Initialization Error', 
+          `Unknown error occurred. Please check the logs for more details.\n\nCurrent APP_ID: ${APP_ID.substring(0, 8)}...`
+        );
+      }
     }
   };
 
@@ -238,8 +253,12 @@ const AgoraVideoCall = () => {
       
     } catch (error) {
       console.error('Error joining channel:', error);
-      console.error('Error details:', error.message);
-      Alert.alert('Join Channel Error', `Failed to join channel: ${error.message}`);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        Alert.alert('Join Channel Error', `Failed to join channel: ${error.message}`);
+      } else {
+        Alert.alert('Join Channel Error', 'Failed to join channel due to an unknown error.');
+      }
     }
   };
 
@@ -257,7 +276,11 @@ const AgoraVideoCall = () => {
       console.log('Leave channel completed');
     } catch (error) {
       console.error('Error leaving channel:', error);
-      Alert.alert('Error', `Failed to leave channel: ${error.message}`);
+      if (error instanceof Error) {
+        Alert.alert('Error', `Failed to leave channel: ${error.message}`);
+      } else {
+        Alert.alert('Error', 'Failed to leave channel due to an unknown error.');
+      }
     }
   };
 
@@ -316,7 +339,7 @@ const AgoraVideoCall = () => {
         {!joined && !remoteUid && (
           <View style={styles.placeholder}>
             <Text style={styles.placeholderText}>
-              Tap "Join Call" to start video chat
+              Tap Join Call to start video chat
             </Text>
           </View>
         )}
