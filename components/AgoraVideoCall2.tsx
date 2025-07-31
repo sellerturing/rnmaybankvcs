@@ -3,7 +3,6 @@ import AgoraUIKit, { ConnectionData } from 'agora-rn-uikit';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Dimensions,
   Platform,
   SafeAreaView,
   StyleSheet,
@@ -12,8 +11,6 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-
-const { height, width } = Dimensions.get('window');
 
 // Configuration - Replace with your actual Agora credentials
 const agoraConfig = {
@@ -69,7 +66,7 @@ const AgoraVideoCall2 = () => {
     }
   };
 
-  const connectionData: ConnectionData = {
+  const connectionData: ConnectionData & {token: string} = {
     appId: appId,
     channel: channelInput,
     token,
