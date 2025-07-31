@@ -2,6 +2,6 @@
 
 export default function HomeScreen() {
   return (
-    <AgoraVideoCall2      />
+    <AgoraVideoCall2/>
   );
 }

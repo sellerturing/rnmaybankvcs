@@ -20,6 +20,55 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="register" 
+          options={{ 
+            headerShown: true,
+            title: 'Register',
+            headerStyle: {
+              backgroundColor: '#FFD700',
+            },
+            headerTintColor: '#000000',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }} 
+        />
+        <Stack.Screen 
+          name="VerificationIdentityCardScreen" 
+          options={{ 
+            headerShown: true,
+            title: 'Identity Verification',
+            headerStyle: {
+              backgroundColor: '#FFD700',
+            },
+            headerTintColor: '#000000',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }} 
+        />
+        <Stack.Screen 
+          name="FaceRecognitionScreen" 
+          options={{ 
+            headerShown: true,
+            title: 'Face Recognition',
+            headerStyle: {
+              backgroundColor: '#FFD700',
+            },
+            headerTintColor: '#000000',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }} 
+        />
+        <Stack.Screen 
+          name="AgoraVideoCall2Screen" 
+          options={{ 
+            headerShown: false,
+          }} 
+        />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>

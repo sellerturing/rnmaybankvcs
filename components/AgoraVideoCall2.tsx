@@ -1,4 +1,3 @@
-
 import RtmEngine from 'agora-react-native-rtm';
 import AgoraUIKit, { ConnectionData } from 'agora-rn-uikit';
 import React, { useEffect, useRef, useState } from 'react';
@@ -11,10 +10,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 // Configuration - Replace with your actual Agora credentials
 const agoraConfig = {
@@ -24,20 +23,13 @@ const agoraConfig = {
   uid: 0, // Use 0 to auto-generate UID
 };
 
-interface AgoraVideoCall2Props {
-  channelName?: string;
-  appId?: string;
-  token?: string | null;
-}
+const appId = agoraConfig.appId;
+const token = agoraConfig.token;
 
-const AgoraVideoCall2: React.FC<AgoraVideoCall2Props> = ({
-  channelName = agoraConfig.channelName,
-  appId = agoraConfig.appId,
-  token = agoraConfig.token,
-}) => {
+const AgoraVideoCall2 = () => {
   const [videoCall, setVideoCall] = useState(true);
   const [isHost, setIsHost] = useState(true);
-  const [channelInput, setChannelInput] = useState(channelName);
+  const [channelInput, setChannelInput] = useState(agoraConfig.channelName);
   const [isInCall, setIsInCall] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
   const [messageInput, setMessageInput] = useState('');
@@ -45,65 +37,76 @@ const AgoraVideoCall2: React.FC<AgoraVideoCall2Props> = ({
   const rtmChannel = useRef<any>(null);
 
   useEffect(() => {
-    // Initialize RTM for messaging
-    initRTM();
+    // Skip RTM initialization to avoid token errors
+    // initRTM();
     
     return () => {
       // Cleanup RTM
-      if (rtmChannel.current) {
-        rtmChannel.current.leave();
-      }
-      if (rtmEngine.current) {
-        rtmEngine.current.logout();
-        rtmEngine.current.destroy();
-      }
+      cleanupRTM();
     };
   }, []);
 
+  const cleanupRTM = async () => {
+    try {
+      if (rtmEngine.current && rtmChannel.current) {
+        await rtmEngine.current.leaveChannel(rtmChannel.current);
+      }
+      if (rtmEngine.current) {
+        await rtmEngine.current.logout();
+        // Check if destroy method exists before calling it
+        if (typeof rtmEngine.current.destroy === 'function') {
+          rtmEngine.current.destroy();
+        }
+      }
+    } catch (error) {
+      console.log('RTM cleanup error (non-critical):', error);
+    }
+  };
+
+  // Send message handler (local only since RTM is disabled)
+  const sendMessage = async () => {
+    if (messageInput.trim()) {
+      setMessages(prev => [...prev, `You: ${messageInput}`]);
+      setMessageInput('');
+      // Note: RTM messaging is disabled to avoid token errors
+    }
+  };
+
   const initRTM = async () => {
     try {
-      if (appId === 'YOUR_AGORA_APP_ID') {
+      if (agoraConfig.appId === 'YOUR_AGORA_APP_ID') {
         Alert.alert('Configuration Required', 'Please replace YOUR_AGORA_APP_ID with your actual Agora App ID');
         return;
       }
 
       rtmEngine.current = new RtmEngine();
-      await rtmEngine.current.createInstance(appId);
-      
+      await rtmEngine.current.createInstance(agoraConfig.appId);
+
       // Login to RTM
-      await rtmEngine.current.login({ uid: `user_${Date.now()}` });
-      
+      const rtmUid = `user_${Date.now()}`;
+      await rtmEngine.current.login({ uid: rtmUid });
+
       // Join RTM channel
-      rtmChannel.current = await rtmEngine.current.createChannel(channelInput);
-      await rtmChannel.current.join();
-      
-      // Listen for channel messages
-      rtmChannel.current.on('MemberJoined', (memberId: string) => {
-        setMessages(prev => [...prev, `${memberId} joined the chat`]);
+      await rtmEngine.current.joinChannel(channelInput);
+
+      // Listen for channel events
+      rtmEngine.current.addListener('ChannelMessageReceived', (evt: { channelId: string; uid: string; text: string }) => {
+        setMessages(prev => [...prev, `${evt.uid}: ${evt.text}`]);
       });
-      
-      rtmChannel.current.on('MemberLeft', (memberId: string) => {
-        setMessages(prev => [...prev, `${memberId} left the chat`]);
+
+      rtmEngine.current.addListener('MemberJoined', (evt: { channelId: string; uid: string }) => {
+        setMessages(prev => [...prev, `${evt.uid} joined the chat`]);
       });
-      
-      rtmChannel.current.on('ChannelMessage', (message: any, memberId: string) => {
-        setMessages(prev => [...prev, `${memberId}: ${message.text}`]);
+
+      rtmEngine.current.addListener('MemberLeft', (evt: { channelId: string; uid: string }) => {
+        setMessages(prev => [...prev, `${evt.uid} left the chat`]);
       });
+
+      // Store channel name for sending messages
+      rtmChannel.current = channelInput;
       
     } catch (error) {
       console.error('RTM initialization failed:', error);
-    }
-  };
-
-  const sendMessage = async () => {
-    if (messageInput.trim() && rtmChannel.current) {
-      try {
-        await rtmChannel.current.sendMessage({ text: messageInput });
-        setMessages(prev => [...prev, `You: ${messageInput}`]);
-        setMessageInput('');
-      } catch (error) {
-        console.error('Failed to send message:', error);
-      }
     }
   };
 
@@ -157,7 +160,7 @@ const AgoraVideoCall2: React.FC<AgoraVideoCall2Props> = ({
           <TouchableOpacity
             style={styles.joinButton}
             onPress={() => {
-              if (appId === 'YOUR_AGORA_APP_ID') {
+              if (!agoraConfig.appId || agoraConfig.appId === 'YOUR_AGORA_APP_ID') {
                 Alert.alert('Configuration Required', 'Please replace YOUR_AGORA_APP_ID with your actual Agora App ID');
                 return;
               }
