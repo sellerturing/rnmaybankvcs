@@ -44,7 +44,7 @@ const customerServiceData = {
   'maybank-support-4': { name: 'David', type: 'Customer Service' },
 };
 
-export default function VerificationVideoCallScreen() {
+export default function VerificationVideoCall() {
   const router = useRouter();
   const actionSheetRef = useRef<any>(null);
   const [currentStep, setCurrentStep] = useState<'connecting' | 'channel-select' | 'pre-call' | 'video-call'>('connecting');

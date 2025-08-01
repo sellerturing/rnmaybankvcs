@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import Snackbar from 'react-native-snackbar';
 
-export default function FaceRecognitionScreen() {
+export default function VerificationFace() {
   const router = useRouter();
   const [isScanning, setIsScanning] = useState(false);
 

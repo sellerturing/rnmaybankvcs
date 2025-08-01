@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, TextInput } from "react-native";
 
-export default function RegisterScreen() {
+export default function VerificationInfo() {
     const router = useRouter();
     const [fullName, setFullName] = useState("");
     const [address, setAddress] = useState("");

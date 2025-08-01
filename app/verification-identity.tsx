@@ -8,7 +8,7 @@ import React, { useRef, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import ActionSheet from "react-native-actions-sheet";
 
-export default function VerificationIdentityCardScreen() {
+export default function VerificationIdentity() {
     const router = useRouter();
     const [image, setImage] = useState(null);
     const actionSheetRef = useRef<any>(null);
