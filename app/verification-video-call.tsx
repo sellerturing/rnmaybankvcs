@@ -2,20 +2,47 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import GradientButton from "@/components/ui/GradientButton";
 import ScreenHeader from "@/components/ui/ScreenHeader";
+import { useNasabahStore } from "@/stores/nasabahStore";
+import { useVideoCallStore } from "@/stores/videoCallStore";
 import RtmEngine from 'agora-react-native-rtm';
 import AgoraUIKit, { ConnectionData } from 'agora-rn-uikit';
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
 import ActionSheet from "react-native-actions-sheet";
+import Snackbar from 'react-native-snackbar';
+
+// Helper function untuk validasi App ID format
+const validateAppId = (appId: string) => {
+  console.log('🔍 Validating App ID format...');
+  console.log('📝 App ID:', appId);
+  console.log('📝 App ID length:', appId.length);
+  console.log('📝 App ID type:', typeof appId);
+  
+  // App ID Agora biasanya 32 karakter hexadecimal
+  const isValidFormat = /^[a-f0-9]{32}$/i.test(appId);
+  console.log('📝 Is valid format (32 hex chars):', isValidFormat);
+  
+  if (!isValidFormat) {
+    console.warn('⚠️ App ID format mungkin tidak standard');
+    console.warn('⚠️ Expected: 32 karakter hexadecimal');
+  }
+  
+  return {
+    isValid: appId && appId.length > 0,
+    isStandardFormat: isValidFormat,
+    length: appId.length
+  };
+};
 
 // Configuration - Replace with your actual Agora credentials
 const agoraConfig = {
@@ -27,6 +54,45 @@ const agoraConfig = {
 
 const appId = agoraConfig.appId;
 const token = agoraConfig.token;
+
+// Memoized AgoraUIKit wrapper untuk mencegah re-render yang tidak perlu
+const MemoizedAgoraUIKit = memo(({ connectionData, rtcCallbacks, settings }: any) => {
+  return (
+    <AgoraUIKit
+      connectionData={connectionData}
+      rtcCallbacks={rtcCallbacks}
+      settings={settings}
+    />
+  );
+});
+
+// Error boundary untuk menangkap error dari Agora
+class AgoraErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.log('Agora Error Boundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ThemedText>Something went wrong with video call.</ThemedText>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Mock data untuk channel/agen yang tersedia
 const availableChannels = [
@@ -47,6 +113,20 @@ const customerServiceData = {
 export default function VerificationVideoCall() {
   const router = useRouter();
   const actionSheetRef = useRef<any>(null);
+  const customChannelActionSheetRef = useRef<any>(null);
+  
+  // Video Call Store
+  const { 
+    videoCallData, 
+    setCustomChannel, 
+    setCustomRtcToken, 
+    setCustomRtmToken,
+    setIsUsingCustom,
+    setVideoCallData 
+  } = useVideoCallStore();
+  
+  // Nasabah Store
+  const { dataNasabah } = useNasabahStore();
   const [currentStep, setCurrentStep] = useState<'connecting' | 'channel-select' | 'pre-call' | 'video-call'>('connecting');
   const [selectedChannel, setSelectedChannel] = useState('');
   const [customerName, setCustomerName] = useState('John Doe');
@@ -60,6 +140,16 @@ export default function VerificationVideoCall() {
   const [messageInput, setMessageInput] = useState('');
   const rtmEngine = useRef<RtmEngine | null>(null);
   const rtmChannel = useRef<any>(null);
+  const [isRtmLoggedIn, setIsRtmLoggedIn] = useState(false);
+  
+  // Custom Channel Form States
+  const [tempChannel, setTempChannel] = useState('');
+  const [tempRtcToken, setTempRtcToken] = useState('');
+  const [tempRtmToken, setTempRtmToken] = useState('');
+  
+  // Ref untuk tracking state dan mencegah multiple setState calls
+  const isInCallRef = useRef(false);
+  const isUpdatingRef = useRef(false);
 
   useEffect(() => {
     // Simulasi proses koneksi
@@ -68,6 +158,9 @@ export default function VerificationVideoCall() {
       setConnectionStatus('Koneksi berhasil!');
       setCurrentStep('channel-select');
     }, 3000);
+
+    // RTM akan di-initialize hanya saat diperlukan (custom channel dengan RTM token)
+    console.log('ℹ️ RTM akan diaktifkan saat menggunakan custom channel dengan RTM token');
 
     return () => {
       clearTimeout(connectionTimer);
@@ -78,18 +171,122 @@ export default function VerificationVideoCall() {
   // Monitor isInCall state changes
   useEffect(() => {
     console.log('isInCall state changed to:', isInCall);
+    isInCallRef.current = isInCall;
   }, [isInCall]);
+
+  // RTM Channel management simplified
+  useEffect(() => {
+    if (channelInput && rtmEngine.current) {
+      console.log(`RTM ready for channel: ${channelInput}`);
+    }
+  }, [channelInput]);
+
+  // Initialize RTM with valid token (hanya ketika diperlukan)
+  const initializeRTMWithToken = async (rtmToken: string) => {
+    try {
+      console.log('🔄 Starting RTM initialization for custom channel...');
+      console.log('📝 RTM Token length:', rtmToken.length);
+      
+      // Create RTM engine instance
+      rtmEngine.current = new RtmEngine();
+      await rtmEngine.current.createInstance(agoraConfig.appId);
+      console.log('✅ RTM Engine created successfully');
+      
+      // Login dengan RTM token dan user ID
+      const userId = `customer_${Date.now()}`;
+      console.log('📝 User ID:', userId);
+      
+      if (rtmEngine.current) {
+        await rtmEngine.current.loginV2(userId, rtmToken);
+        console.log('✅ RTM Login successful');
+      }
+      
+      setIsRtmLoggedIn(true);
+      
+      // Show success notification for RTM login
+      Snackbar.show({
+        text: '✅ RTM Connected - Berhasil terhubung ke RTM untuk messaging dengan agent',
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: '#4CAF50',
+        textColor: '#FFFFFF'
+      });
+      
+    } catch (error: any) {
+      console.error('❌ RTM initialization error:', error);
+      setIsRtmLoggedIn(false);
+      
+      // Hanya tampilkan error jika user benar-benar menggunakan RTM token
+      // Tidak menampilkan error jika RTM belum diaktifkan di console
+      if (error.message?.includes('INVALID_TOKEN')) {
+        Snackbar.show({
+          text: '❌ RTM Token Error - RTM Token tidak valid. Pastikan token di-generate untuk RTM dan belum expired.',
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: '#FF9800',
+          textColor: '#FFFFFF'
+        });
+      } else if (error.message?.includes('INVALID_APP_ID')) {
+        // Hanya log ke console, tidak tampilkan snackbar untuk App ID error
+        console.warn('⚠️ RTM not activated in Agora Console - this is optional for video calls');
+      } else {
+        console.error('❌ RTM Error:', error.message);
+      }
+    }
+  };
 
   const cleanupRTM = async () => {
     try {
-      if (rtmEngine.current && rtmChannel.current) {
-        await rtmEngine.current.leaveChannel(rtmChannel.current);
+      if (rtmChannel.current) {
+        await rtmChannel.current?.leave();
       }
       if (rtmEngine.current) {
-        await rtmEngine.current.logout();
+        await rtmEngine.current?.logout();
       }
     } catch (error) {
       console.log('RTM cleanup error (non-critical):', error);
+    }
+  };
+
+  // Fungsi untuk mengirim data nasabah ke agent via RTM  
+  const sendCustomerDataToAgent = async () => {
+    try {
+      // Format data nasabah untuk dikirim ke agent
+      const customerData = {
+        type: 'CUSTOMER_INFO',
+        timestamp: new Date().toISOString(),
+        data: {
+          namaLengkap: dataNasabah.namaLengkap || 'Tidak tersedia',
+          alamat: dataNasabah.alamat || 'Tidak tersedia',
+          nomorTelpon: dataNasabah.nomorTelpon || 'Tidak tersedia',
+          channel: channelInput,
+          sessionId: Date.now().toString()
+        }
+      };
+
+      // Log data nasabah yang akan dikirim (untuk development/debugging)
+      const message = JSON.stringify(customerData);
+      console.log('📤 Customer data prepared for agent:', customerData);
+      
+      // Kirim data jika RTM tersedia, jika tidak cukup log saja
+      if (rtmEngine.current && isRtmLoggedIn) {
+        console.log('✅ RTM available - data ready to be sent via RTM');
+        // TODO: Implement actual RTM message sending when needed
+      } else {
+        console.log('ℹ️ RTM not available - data logged untuk debugging purposes');
+      }
+      
+      // Hanya tampilkan notifikasi jika RTM benar-benar aktif
+      if (isRtmLoggedIn) {
+        Snackbar.show({
+          text: '📤 Data Nasabah Siap - Data nasabah telah disiapkan untuk dikirim ke agent',
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: '#2196F3',
+          textColor: '#FFFFFF'
+        });
+      }
+      
+    } catch (error: any) {
+      console.log('⚠️ Error preparing customer data:', error);
+      // Tidak tampilkan snackbar error untuk ini karena bukan critical error
     }
   };
 
@@ -109,10 +306,18 @@ export default function VerificationVideoCall() {
     return availableChannels.find(channel => channel.id === selectedChannel);
   };
 
-  const handleStartVideoCall = () => {
+  const handleStartVideoCall = useCallback(() => {
     setCurrentStep('video-call');
     setVideoCall(true);
-  };
+    // Reset refs ketika video call dimulai
+    isInCallRef.current = false;
+    isUpdatingRef.current = false;
+    
+    // Kirim data nasabah setelah delay singkat untuk memastikan channel sudah ready
+    setTimeout(() => {
+      sendCustomerDataToAgent();
+    }, 2000);
+  }, [sendCustomerDataToAgent]);
 
   const showCancelActionSheet = () => {
     actionSheetRef.current?.show();
@@ -126,6 +331,8 @@ export default function VerificationVideoCall() {
     setConnectionStatus('Menghubungkan ke server...');
     setVideoCall(false);
     setIsInCall(false);
+    isInCallRef.current = false;
+    isUpdatingRef.current = false;
     // Kembali ke screen awal
     router.push('/verification-info');
   };
@@ -144,34 +351,140 @@ export default function VerificationVideoCall() {
     }
   };
 
+  // Custom Channel Handlers
+  const showCustomChannelActionSheet = () => {
+    // Initialize dengan data dari store jika ada
+    setTempChannel(videoCallData.customChannel || '');
+    setTempRtcToken(videoCallData.customRtcToken || '');
+    setTempRtmToken(videoCallData.customRtmToken || '');
+    customChannelActionSheetRef.current?.show();
+  };
+
+  const handleCustomChannelSubmit = async () => {
+    // Validasi input
+    if (!tempChannel.trim()) {
+      Snackbar.show({
+        text: '⚠️ Input Error - Nama channel harus diisi',
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: '#FF9800',
+        textColor: '#FFFFFF'
+      });
+      return;
+    }
+
+    if (!tempRtcToken.trim()) {
+      Snackbar.show({
+        text: '⚠️ Input Error - RTC Token untuk video call harus diisi',
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: '#FF9800',
+        textColor: '#FFFFFF'
+      });
+      return;
+    }
+
+    if (!tempRtmToken.trim()) {
+      Snackbar.show({
+        text: '⚠️ Input Error - RTM Token untuk messaging harus diisi',
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: '#FF9800',
+        textColor: '#FFFFFF'
+      });
+      return;
+    }
+
+    // Simpan ke store
+    setVideoCallData({
+      customChannel: tempChannel.trim(),
+      customRtcToken: tempRtcToken.trim(),
+      customRtmToken: tempRtmToken.trim(),
+      isUsingCustom: true,
+    });
+
+    // Update channelInput untuk digunakan oleh connectionData
+    setChannelInput(tempChannel.trim());
+
+    // Show success notification for custom channel setup
+    Snackbar.show({
+      text: `✅ Custom Channel Set - Berhasil setup custom channel: ${tempChannel.trim()}`,
+      duration: Snackbar.LENGTH_SHORT,
+      backgroundColor: '#4CAF50',
+      textColor: '#FFFFFF'
+    });
+
+    // Initialize RTM dengan token yang valid
+    console.log('🔄 Initializing RTM dengan custom token...');
+    await initializeRTMWithToken(tempRtmToken.trim());
+
+    // Tutup action sheet
+    customChannelActionSheetRef.current?.hide();
+
+    // Langsung mulai video call dengan custom channel
+    setCurrentStep('video-call');
+    setVideoCall(true);
+    setIsInCall(false);
+    
+    // Kirim data nasabah setelah delay singkat untuk memastikan RTM ready
+    setTimeout(() => {
+      sendCustomerDataToAgent();
+    }, 3000); // Tambah delay untuk RTM initialization
+  };
+
+  const handleCustomChannelCancel = () => {
+    // Reset temp values
+    setTempChannel('');
+    setTempRtcToken('');
+    setTempRtmToken('');
+    customChannelActionSheetRef.current?.hide();
+  };
+
+  // Updated connectionData to use custom RTC token if available
   const connectionData: ConnectionData & {token: string} = {
     appId: appId,
     channel: channelInput,
-    token,
+    token: videoCallData.isUsingCustom && videoCallData.customRtcToken ? videoCallData.customRtcToken : token,
   };
 
-  const callbacks = {
+
+
+  // Callbacks dengan safe state updates dan error handling
+  const callbacks = useMemo(() => ({
     EndCall: () => {
-      setVideoCall(false);
-      setIsInCall(false);
-      router.back();
+      console.log('EndCall triggered');
+      setTimeout(() => {
+        setVideoCall(false);
+        setIsInCall(false);
+        router.back();
+      }, 0);
     },
     
     StartCall: () => {
-      console.log('StartCall triggered - setting isInCall to true');
-      setIsInCall(true);
+      console.log('StartCall triggered');
+      setTimeout(() => setIsInCall(true), 0);
     },
 
     UserJoined: () => {
-      console.log('UserJoined triggered - setting isInCall to true');
-      setIsInCall(true);
+      console.log('UserJoined triggered');
+      setTimeout(() => {
+        setIsInCall(true);
+        // Kirim data nasabah ketika ada agent yang join
+        sendCustomerDataToAgent();
+      }, 1000); // Delay sedikit untuk memastikan RTM channel ready
     },
 
     JoinChannelSuccess: () => {
-      console.log('JoinChannelSuccess triggered - setting isInCall to true');
-      setIsInCall(true);
+      console.log('JoinChannelSuccess triggered');
+      setTimeout(() => {
+        setIsInCall(true);
+        // Kirim data nasabah ketika berhasil join channel
+        sendCustomerDataToAgent();
+      }, 1000); // Delay sedikit untuk memastikan RTM channel ready
     },
-  };
+
+    // Tambahkan error handler
+    Error: (error: any) => {
+      console.log('Agora Error:', error);
+    },
+  }), [router, sendCustomerDataToAgent]);
 
   // Loading/Connecting Screen
   if (currentStep === 'connecting') {
@@ -277,6 +590,22 @@ export default function VerificationVideoCall() {
                  </View>
               </TouchableOpacity>
             ))}
+
+            {/* Custom Channel Input Button */}
+            <TouchableOpacity
+              style={[styles.channelItem, styles.customChannelItem]}
+              onPress={showCustomChannelActionSheet}
+            >
+              <View style={styles.channelInfo}>
+                <View style={styles.agentRow}>
+                  <ThemedText style={styles.channelName}>📺 Input Custom Channel</ThemedText>
+                  <View style={styles.statusRow}>
+                    <View style={[styles.statusDot, styles.statusCustom]} />
+                    <ThemedText style={styles.channelAgent}>Custom</ThemedText>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -315,6 +644,80 @@ export default function VerificationVideoCall() {
             >
               <ThemedText style={styles.actionSheetButtonText}>
                 Tidak, Lanjutkan
+              </ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </ActionSheet>
+
+        {/* Custom Channel Input ActionSheet */}
+        <ActionSheet
+          ref={customChannelActionSheetRef}
+          containerStyle={styles.actionSheetContainer}
+          indicatorStyle={styles.actionSheetIndicator}
+          gestureEnabled={true}
+          defaultOverlayOpacity={0.3}
+        >
+          <ThemedView style={styles.actionSheetContent}>
+            <ThemedText style={styles.actionSheetTitle}>
+              Input Custom Channel
+            </ThemedText>
+            
+            <ThemedText style={styles.actionSheetMessage}>
+              Masukkan nama channel, RTC token (video call), dan RTM token (messaging)
+            </ThemedText>
+            
+            <View style={styles.inputContainer}>
+              <ThemedText style={styles.inputLabel}>Nama Channel:</ThemedText>
+              <TextInput
+                style={styles.actionSheetInput}
+                placeholder="Masukkan nama channel"
+                value={tempChannel}
+                onChangeText={setTempChannel}
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <ThemedText style={styles.inputLabel}>RTC Token (Video Call):</ThemedText>
+              <TextInput
+                style={[styles.actionSheetInput, styles.tokenInput]}
+                placeholder="007eJxT... (dari Agora Console → RTC Token)"
+                value={tempRtcToken}
+                onChangeText={setTempRtcToken}
+                multiline={true}
+                numberOfLines={2}
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <ThemedText style={styles.inputLabel}>RTM Token (Messaging):</ThemedText>
+              <TextInput
+                style={[styles.actionSheetInput, styles.tokenInput]}
+                placeholder="007eJxT... (dari Agora Console → RTM Token)"
+                value={tempRtmToken}
+                onChangeText={setTempRtmToken}
+                multiline={true}
+                numberOfLines={2}
+                autoCapitalize="none"
+              />
+            </View>
+            
+            <TouchableOpacity
+              style={[styles.actionSheetButton, styles.confirmButton]}
+              onPress={handleCustomChannelSubmit}
+            >
+              <ThemedText style={styles.confirmButtonText}>
+                Join Channel
+              </ThemedText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.actionSheetButton}
+              onPress={handleCustomChannelCancel}
+            >
+              <ThemedText style={styles.actionSheetButtonText}>
+                Batal
               </ThemedText>
             </TouchableOpacity>
           </ThemedView>
@@ -415,11 +818,19 @@ export default function VerificationVideoCall() {
   if (videoCall) {
     return (
       <SafeAreaView style={styles.fullScreen}>
-        <AgoraUIKit
-          connectionData={connectionData}
-          rtcCallbacks={callbacks}
-          
-        />
+        {/* Wrapper untuk mencegah setState selama rendering */}
+        <View style={styles.agoraWrapper}>
+          <AgoraErrorBoundary>
+            <MemoizedAgoraUIKit
+              connectionData={connectionData}
+              rtcCallbacks={callbacks}
+              settings={{
+                // Disable automatic state updates yang bisa menyebabkan error
+                disableRtm: true,
+              }}
+            />
+          </AgoraErrorBoundary>
+        </View>
         
         {/* Channel Info Overlay - Only show when not in call */}
         {!isInCall && videoCall && (
@@ -464,6 +875,9 @@ const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  agoraWrapper: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -531,6 +945,14 @@ const styles = StyleSheet.create({
   },
   statusOffline: {
     backgroundColor: '#6c757d',
+  },
+  statusCustom: {
+    backgroundColor: '#007bff',
+  },
+  customChannelItem: {
+    borderColor: '#007bff',
+    borderWidth: 2,
+    backgroundColor: '#f8f9ff',
   },
   channelAgent: {
     fontSize: 14,
@@ -745,6 +1167,40 @@ const styles = StyleSheet.create({
   confirmCancelButtonText: {
     fontSize: 14,
     fontWeight: "500",
+    color: "#ffffff",
+    textAlign: "center",
+  },
+
+  // Custom Channel Form Styles
+  inputContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 5,
+    color: "#2c3e50",
+  },
+  actionSheetInput: {
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    backgroundColor: "#f8f9fa",
+    color: "#2c3e50",
+  },
+  tokenInput: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  confirmButton: {
+    backgroundColor: "#007bff",
+    borderColor: "#007bff",
+  },
+  confirmButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
     color: "#ffffff",
     textAlign: "center",
   },

@@ -2,17 +2,47 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import GradientButton from "@/components/ui/GradientButton";
 import ScreenHeader from "@/components/ui/ScreenHeader";
+import { useNasabahStore } from "@/stores/nasabahStore";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, TextInput } from "react-native";
+import React from "react";
+import { Alert, ScrollView, StyleSheet, TextInput } from "react-native";
 
 export default function VerificationInfo() {
     const router = useRouter();
-    const [fullName, setFullName] = useState("");
-    const [address, setAddress] = useState("");
-    const [phone, setPhone] = useState("");
+    const { 
+        dataNasabah, 
+        setNamaLengkap, 
+        setAlamat, 
+        setNomorTelpon,
+        setDataNasabah 
+    } = useNasabahStore();
 
     const handleRegister = () => {
+        // Validasi data sebelum lanjut
+        if (!dataNasabah.namaLengkap.trim()) {
+            Alert.alert("Error", "Nama lengkap harus diisi");
+            return;
+        }
+        
+        if (!dataNasabah.alamat.trim()) {
+            Alert.alert("Error", "Alamat harus diisi");
+            return;
+        }
+        
+        if (!dataNasabah.nomorTelpon.trim()) {
+            Alert.alert("Error", "Nomor telepon harus diisi");
+            return;
+        }
+
+        // Validasi format nomor telepon sederhana
+        const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
+        if (!phoneRegex.test(dataNasabah.nomorTelpon)) {
+            Alert.alert("Error", "Format nomor telepon tidak valid");
+            return;
+        }
+
+        // Data sudah tersimpan di store melalui onChangeText,
+        // langsung navigasi ke halaman berikutnya
         router.push("/verification-identity");
     };
 
@@ -31,16 +61,16 @@ export default function VerificationInfo() {
                 <TextInput
                     style={styles.input}
                     placeholder="Masukkan Nama Lengkap"
-                    value={fullName}
-                    onChangeText={setFullName}
+                    value={dataNasabah.namaLengkap}
+                    onChangeText={setNamaLengkap}
                 />
 
                 <ThemedText style={styles.label}>Alamat</ThemedText>
                 <TextInput
                     style={styles.input}
                     placeholder="Masukkan alamat lengkap"
-                    value={address}
-                    onChangeText={setAddress}
+                    value={dataNasabah.alamat}
+                    onChangeText={setAlamat}
                     multiline
                 />
 
@@ -48,8 +78,8 @@ export default function VerificationInfo() {
                 <TextInput
                     style={styles.input}
                     placeholder="Masukkan nomor telepon"
-                    value={phone}
-                    onChangeText={setPhone}
+                    value={dataNasabah.nomorTelpon}
+                    onChangeText={setNomorTelpon}
                     keyboardType="phone-pad"
                 />
             </ScrollView>

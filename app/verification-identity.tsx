@@ -2,16 +2,18 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import GradientButton from "@/components/ui/GradientButton";
 import ScreenHeader from "@/components/ui/ScreenHeader";
+import { useNasabahStore } from "@/stores/nasabahStore";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import ActionSheet from "react-native-actions-sheet";
 
 export default function VerificationIdentity() {
     const router = useRouter();
     const [image, setImage] = useState(null);
     const actionSheetRef = useRef<any>(null);
+    const { dataNasabah } = useNasabahStore();
 
     const requestPermissions = async () => {
         const { status } =
@@ -92,6 +94,20 @@ export default function VerificationIdentity() {
                     title="Verifikasi Identitas"
                     subheading="Unggah atau ambil foto e-KTP Anda untuk melanjutkan proses pendaftaran"
                 />
+
+                {/* Preview Data Nasabah yang sudah disimpan */}
+                <View style={styles.dataPreviewContainer}>
+                    <ThemedText style={styles.dataPreviewTitle}>Data Nasabah:</ThemedText>
+                    <ThemedText style={styles.dataPreviewText}>
+                        Nama: {dataNasabah.namaLengkap || 'Belum diisi'}
+                    </ThemedText>
+                    <ThemedText style={styles.dataPreviewText}>
+                        Alamat: {dataNasabah.alamat || 'Belum diisi'}
+                    </ThemedText>
+                    <ThemedText style={styles.dataPreviewText}>
+                        Telepon: {dataNasabah.nomorTelpon || 'Belum diisi'}
+                    </ThemedText>
+                </View>
 
                 <TouchableOpacity onPress={showActionSheet} activeOpacity={0.8}>
                     {image ? (
@@ -293,5 +309,26 @@ const styles = StyleSheet.create({
         fontWeight: "500",
         color: "#dc3545",
         textAlign: "center",
+    },
+    // Data Preview Styles
+    dataPreviewContainer: {
+        backgroundColor: "#f8f9fa",
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: "#e9ecef",
+    },
+    dataPreviewTitle: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#2c3e50",
+        marginBottom: 8,
+    },
+    dataPreviewText: {
+        fontSize: 14,
+        color: "#495057",
+        marginBottom: 4,
+        fontWeight: "400",
     },
 });
