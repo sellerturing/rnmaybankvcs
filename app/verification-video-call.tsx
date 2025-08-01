@@ -21,7 +21,7 @@ import ActionSheet from "react-native-actions-sheet";
 const agoraConfig = {
   appId: '91e678602eb04e7fa9ec37f6575fa9c2', // Replace with your App ID
   channelName: 'test-channel', // Default channel name
-  token: "007eJxTYEiLtLn0+hyT56bD9q/8L21u27yOhY/1/SUmkWUR3BGcM80UGCwNU83MLcwMjFKTDExSzdMSLVOTjc3TzEzNTYHsZCP+j10ZDYGMDAIflRgZGSAQxOdhKEktLtFNzkjMy0vNYWAAAPWVIPk=", // Use null for testing, add your token for production
+  token: "007eJxTYJi3ZeqbrjMdZ3Rb4mYmCWaVTF39Z3VH0vmffHePpE2MlO9QYLA0TDUztzAzMEpNMjBJNU9LtExNNjZPMzM1NwWyk40ON/dkNAQyMvxLbGRhZIBAEJ+HoSS1uEQ3OSMxLy81h4EBADy1JWU=", // Use null for testing, add your token for production
   uid: 0, // Use 0 to auto-generate UID
 };
 
