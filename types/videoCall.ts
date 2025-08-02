@@ -1,7 +1,7 @@
 export interface VideoCallData {
   customChannel: string;
-  customRtcToken: string;  // Token untuk video call (RTC)
-  customRtmToken: string;  // Token untuk messaging (RTM)
+  customRtcToken: string; // Token untuk video call (RTC)
+  customRtmToken: string; // Token untuk messaging (RTM)
   isUsingCustom: boolean;
 }
 

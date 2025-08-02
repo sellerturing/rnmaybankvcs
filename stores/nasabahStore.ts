@@ -7,29 +7,28 @@ const initialDataNasabah: DataNasabah = {
   nomorTelpon: '',
 };
 
-export const useNasabahStore = create<NasabahState>((set) => ({
+export const useNasabahStore = create<NasabahState>(set => ({
   dataNasabah: initialDataNasabah,
-  
+
   setNamaLengkap: (nama: string) =>
-    set((state) => ({
+    set(state => ({
       dataNasabah: { ...state.dataNasabah, namaLengkap: nama },
     })),
-  
+
   setAlamat: (alamat: string) =>
-    set((state) => ({
+    set(state => ({
       dataNasabah: { ...state.dataNasabah, alamat },
     })),
-  
+
   setNomorTelpon: (nomor: string) =>
-    set((state) => ({
+    set(state => ({
       dataNasabah: { ...state.dataNasabah, nomorTelpon: nomor },
     })),
-  
+
   setDataNasabah: (data: Partial<DataNasabah>) =>
-    set((state) => ({
+    set(state => ({
       dataNasabah: { ...state.dataNasabah, ...data },
     })),
-  
-  resetDataNasabah: () =>
-    set({ dataNasabah: initialDataNasabah }),
+
+  resetDataNasabah: () => set({ dataNasabah: initialDataNasabah }),
 }));

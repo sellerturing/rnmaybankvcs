@@ -31,13 +31,13 @@ import { useNasabahStore, useVideoCallStore } from '@/stores';
 
 ```typescript
 export default function MyComponent() {
-  const { 
-    dataNasabah, 
-    setNamaLengkap, 
-    setAlamat, 
+  const {
+    dataNasabah,
+    setNamaLengkap,
+    setAlamat,
     setNomorTelpon,
     setDataNasabah,
-    resetDataNasabah 
+    resetDataNasabah
   } = useNasabahStore();
 
   return (
@@ -56,6 +56,7 @@ export default function MyComponent() {
 ### 3. Methods yang Tersedia
 
 #### Nasabah Store Methods
+
 - `setNamaLengkap(nama: string)` - Set nama lengkap
 - `setAlamat(alamat: string)` - Set alamat
 - `setNomorTelpon(nomor: string)` - Set nomor telepon
@@ -63,6 +64,7 @@ export default function MyComponent() {
 - `resetDataNasabah()` - Reset semua data ke nilai awal
 
 #### Video Call Store Methods
+
 - `setCustomChannel(channel: string)` - Set custom channel name
 - `setCustomToken(token: string)` - Set custom token
 - `setIsUsingCustom(isUsing: boolean)` - Set apakah menggunakan custom channel
@@ -73,12 +75,12 @@ export default function MyComponent() {
 
 ```typescript
 export default function VideoComponent() {
-  const { 
-    videoCallData, 
-    setCustomChannel, 
-    setCustomToken, 
+  const {
+    videoCallData,
+    setCustomChannel,
+    setCustomToken,
     setIsUsingCustom,
-    setVideoCallData 
+    setVideoCallData
   } = useVideoCallStore();
 
   const handleJoinCustomChannel = () => {
@@ -98,15 +100,18 @@ export default function VideoComponent() {
 ### 5. Contoh Implementasi Lengkap
 
 **Nasabah Store** sudah diimplementasikan di:
+
 - `app/verification-info.tsx` - Form input data nasabah
 - `app/verification-identity.tsx` - Preview data yang sudah tersimpan
 
 **Video Call Store** sudah diimplementasikan di:
+
 - `app/verification-video-call.tsx` - Custom channel input dan join video call
 
 ## Data Structures
 
 ### Nasabah Data
+
 ```typescript
 interface DataNasabah {
   namaLengkap: string;
@@ -116,11 +121,12 @@ interface DataNasabah {
 ```
 
 ### Video Call Data
+
 ```typescript
 interface VideoCallData {
   customChannel: string;
-  customRtcToken: string;  // Token untuk video call (RTC)
-  customRtmToken: string;  // Token untuk messaging (RTM)
+  customRtcToken: string; // Token untuk video call (RTC)
+  customRtmToken: string; // Token untuk messaging (RTM)
   isUsingCustom: boolean;
 }
 ```
@@ -128,11 +134,13 @@ interface VideoCallData {
 ### Token Types Explanation
 
 #### **RTC Token (Video Call)**
+
 - Digunakan untuk video call & audio call
 - Generate dari Agora Console → Project → Token → RTC Token
 - Format: `007eJxT...` (panjang)
 
-#### **RTM Token (Real-time Messaging)**  
+#### **RTM Token (Real-time Messaging)**
+
 - Digunakan untuk text messaging & signaling
 - Generate dari Agora Console → Project → Token → RTM Token
 - Format: `007eJxT...` (panjang, berbeda dari RTC)
@@ -149,6 +157,7 @@ interface VideoCallData {
 ## Future Enhancement
 
 Untuk pengembangan selanjutnya, bisa ditambahkan:
+
 - Data persistence dengan AsyncStorage
 - Data validasi yang lebih kompleks
 - Store terpisah untuk data identitas

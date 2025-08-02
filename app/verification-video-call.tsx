@@ -1,13 +1,20 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import GradientButton from "@/components/ui/GradientButton";
-import ScreenHeader from "@/components/ui/ScreenHeader";
-import { useNasabahStore } from "@/stores/nasabahStore";
-import { useVideoCallStore } from "@/stores/videoCallStore";
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import GradientButton from '@/components/ui/GradientButton';
+import ScreenHeader from '@/components/ui/ScreenHeader';
+import { useNasabahStore } from '@/stores/nasabahStore';
+import { useVideoCallStore } from '@/stores/videoCallStore';
 import RtmEngine from 'agora-react-native-rtm';
 import AgoraUIKit, { ConnectionData } from 'agora-rn-uikit';
-import { useRouter } from "expo-router";
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -16,9 +23,9 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import ActionSheet from "react-native-actions-sheet";
+import ActionSheet from 'react-native-actions-sheet';
 import Snackbar from 'react-native-snackbar';
 
 // Helper function untuk validasi App ID format
@@ -27,20 +34,20 @@ const validateAppId = (appId: string) => {
   console.log('📝 App ID:', appId);
   console.log('📝 App ID length:', appId.length);
   console.log('📝 App ID type:', typeof appId);
-  
+
   // App ID Agora biasanya 32 karakter hexadecimal
   const isValidFormat = /^[a-f0-9]{32}$/i.test(appId);
   console.log('📝 Is valid format (32 hex chars):', isValidFormat);
-  
+
   if (!isValidFormat) {
     console.warn('⚠️ App ID format mungkin tidak standard');
     console.warn('⚠️ Expected: 32 karakter hexadecimal');
   }
-  
+
   return {
     isValid: appId && appId.length > 0,
     isStandardFormat: isValidFormat,
-    length: appId.length
+    length: appId.length,
   };
 };
 
@@ -48,7 +55,8 @@ const validateAppId = (appId: string) => {
 const agoraConfig = {
   appId: '91e678602eb04e7fa9ec37f6575fa9c2', // Replace with your App ID
   channelName: 'test-channel', // Default channel name
-  token: "007eJxTYJi3ZeqbrjMdZ3Rb4mYmCWaVTF39Z3VH0vmffHePpE2MlO9QYLA0TDUztzAzMEpNMjBJNU9LtExNNjZPMzM1NwWyk40ON/dkNAQyMvxLbGRhZIBAEJ+HoSS1uEQ3OSMxLy81h4EBADy1JWU=", // Use null for testing, add your token for production
+  token:
+    '007eJxTYJi3ZeqbrjMdZ3Rb4mYmCWaVTF39Z3VH0vmffHePpE2MlO9QYLA0TDUztzAzMEpNMjBJNU9LtExNNjZPMzM1NwWyk40ON/dkNAQyMvxLbGRhZIBAEJ+HoSS1uEQ3OSMxLy81h4EBADy1JWU=', // Use null for testing, add your token for production
   uid: 0, // Use 0 to auto-generate UID
 };
 
@@ -56,19 +64,24 @@ const appId = agoraConfig.appId;
 const token = agoraConfig.token;
 
 // Memoized AgoraUIKit wrapper untuk mencegah re-render yang tidak perlu
-const MemoizedAgoraUIKit = memo(({ connectionData, rtcCallbacks, settings }: any) => {
-  return (
-    <AgoraUIKit
-      connectionData={connectionData}
-      rtcCallbacks={rtcCallbacks}
-      settings={settings}
-    />
-  );
-});
+const MemoizedAgoraUIKit = memo(
+  ({ connectionData, rtcCallbacks, settings }: any) => {
+    return (
+      <AgoraUIKit
+        connectionData={connectionData}
+        rtcCallbacks={rtcCallbacks}
+        settings={settings}
+      />
+    );
+  }
+);
 
 // Error boundary untuk menangkap error dari Agora
-class AgoraErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
-  constructor(props: {children: React.ReactNode}) {
+class AgoraErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -84,7 +97,9 @@ class AgoraErrorBoundary extends React.Component<{children: React.ReactNode}, {h
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
           <ThemedText>Something went wrong with video call.</ThemedText>
         </View>
       );
@@ -96,10 +111,30 @@ class AgoraErrorBoundary extends React.Component<{children: React.ReactNode}, {h
 
 // Mock data untuk channel/agen yang tersedia
 const availableChannels = [
-  { id: 'test-channel', name: 'Customer Service 1', status: 'available', agent: 'Sarah' },
-  { id: 'test-channel-2', name: 'Customer Service 2', status: 'busy', agent: 'John' },
-  { id: 'test-channel-3', name: 'Customer Service 3', status: 'available', agent: 'Maria' },
-  { id: 'test-channel-4', name: 'Customer Service 4', status: 'offline', agent: 'David' },
+  {
+    id: 'test-channel',
+    name: 'Customer Service 1',
+    status: 'available',
+    agent: 'Sarah',
+  },
+  {
+    id: 'test-channel-2',
+    name: 'Customer Service 2',
+    status: 'busy',
+    agent: 'John',
+  },
+  {
+    id: 'test-channel-3',
+    name: 'Customer Service 3',
+    status: 'available',
+    agent: 'Maria',
+  },
+  {
+    id: 'test-channel-4',
+    name: 'Customer Service 4',
+    status: 'offline',
+    agent: 'David',
+  },
 ];
 
 // Mock data untuk customer service berdasarkan channel yang dipilih
@@ -114,24 +149,28 @@ export default function VerificationVideoCall() {
   const router = useRouter();
   const actionSheetRef = useRef<any>(null);
   const customChannelActionSheetRef = useRef<any>(null);
-  
+
   // Video Call Store
-  const { 
-    videoCallData, 
-    setCustomChannel, 
-    setCustomRtcToken, 
+  const {
+    videoCallData,
+    setCustomChannel,
+    setCustomRtcToken,
     setCustomRtmToken,
     setIsUsingCustom,
-    setVideoCallData 
+    setVideoCallData,
   } = useVideoCallStore();
-  
+
   // Nasabah Store
   const { dataNasabah } = useNasabahStore();
-  const [currentStep, setCurrentStep] = useState<'connecting' | 'channel-select' | 'pre-call' | 'video-call'>('connecting');
+  const [currentStep, setCurrentStep] = useState<
+    'connecting' | 'channel-select' | 'pre-call' | 'video-call'
+  >('connecting');
   const [selectedChannel, setSelectedChannel] = useState('');
   const [customerName, setCustomerName] = useState('John Doe');
   const [isConnecting, setIsConnecting] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState('Menghubungkan ke server...');
+  const [connectionStatus, setConnectionStatus] = useState(
+    'Menghubungkan ke server...'
+  );
   const [videoCall, setVideoCall] = useState(false);
   const [isHost, setIsHost] = useState(false); // Customer biasanya bukan host
   const [channelInput, setChannelInput] = useState(agoraConfig.channelName);
@@ -141,12 +180,12 @@ export default function VerificationVideoCall() {
   const rtmEngine = useRef<RtmEngine | null>(null);
   const rtmChannel = useRef<any>(null);
   const [isRtmLoggedIn, setIsRtmLoggedIn] = useState(false);
-  
+
   // Custom Channel Form States
   const [tempChannel, setTempChannel] = useState('');
   const [tempRtcToken, setTempRtcToken] = useState('');
   const [tempRtmToken, setTempRtmToken] = useState('');
-  
+
   // Ref untuk tracking state dan mencegah multiple setState calls
   const isInCallRef = useRef(false);
   const isUpdatingRef = useRef(false);
@@ -160,7 +199,9 @@ export default function VerificationVideoCall() {
     }, 3000);
 
     // RTM akan di-initialize hanya saat diperlukan (custom channel dengan RTM token)
-    console.log('ℹ️ RTM akan diaktifkan saat menggunakan custom channel dengan RTM token');
+    console.log(
+      'ℹ️ RTM akan diaktifkan saat menggunakan custom channel dengan RTM token'
+    );
 
     return () => {
       clearTimeout(connectionTimer);
@@ -186,35 +227,34 @@ export default function VerificationVideoCall() {
     try {
       console.log('🔄 Starting RTM initialization for custom channel...');
       console.log('📝 RTM Token length:', rtmToken.length);
-      
+
       // Create RTM engine instance
       rtmEngine.current = new RtmEngine();
       await rtmEngine.current.createInstance(agoraConfig.appId);
       console.log('✅ RTM Engine created successfully');
-      
+
       // Login dengan RTM token dan user ID
       const userId = `customer_${Date.now()}`;
       console.log('📝 User ID:', userId);
-      
+
       if (rtmEngine.current) {
         await rtmEngine.current.loginV2(userId, rtmToken);
         console.log('✅ RTM Login successful');
       }
-      
+
       setIsRtmLoggedIn(true);
-      
+
       // Show success notification for RTM login
       Snackbar.show({
         text: '✅ RTM Connected - Berhasil terhubung ke RTM untuk messaging dengan agent',
         duration: Snackbar.LENGTH_SHORT,
         backgroundColor: '#4CAF50',
-        textColor: '#FFFFFF'
+        textColor: '#FFFFFF',
       });
-      
     } catch (error: any) {
       console.error('❌ RTM initialization error:', error);
       setIsRtmLoggedIn(false);
-      
+
       // Hanya tampilkan error jika user benar-benar menggunakan RTM token
       // Tidak menampilkan error jika RTM belum diaktifkan di console
       if (error.message?.includes('INVALID_TOKEN')) {
@@ -222,11 +262,13 @@ export default function VerificationVideoCall() {
           text: '❌ RTM Token Error - RTM Token tidak valid. Pastikan token di-generate untuk RTM dan belum expired.',
           duration: Snackbar.LENGTH_SHORT,
           backgroundColor: '#FF9800',
-          textColor: '#FFFFFF'
+          textColor: '#FFFFFF',
         });
       } else if (error.message?.includes('INVALID_APP_ID')) {
         // Hanya log ke console, tidak tampilkan snackbar untuk App ID error
-        console.warn('⚠️ RTM not activated in Agora Console - this is optional for video calls');
+        console.warn(
+          '⚠️ RTM not activated in Agora Console - this is optional for video calls'
+        );
       } else {
         console.error('❌ RTM Error:', error.message);
       }
@@ -246,7 +288,7 @@ export default function VerificationVideoCall() {
     }
   };
 
-  // Fungsi untuk mengirim data nasabah ke agent via RTM  
+  // Fungsi untuk mengirim data nasabah ke agent via RTM
   const sendCustomerDataToAgent = async () => {
     try {
       // Format data nasabah untuk dikirim ke agent
@@ -258,32 +300,33 @@ export default function VerificationVideoCall() {
           alamat: dataNasabah.alamat || 'Tidak tersedia',
           nomorTelpon: dataNasabah.nomorTelpon || 'Tidak tersedia',
           channel: channelInput,
-          sessionId: Date.now().toString()
-        }
+          sessionId: Date.now().toString(),
+        },
       };
 
       // Log data nasabah yang akan dikirim (untuk development/debugging)
       const message = JSON.stringify(customerData);
       console.log('📤 Customer data prepared for agent:', customerData);
-      
+
       // Kirim data jika RTM tersedia, jika tidak cukup log saja
       if (rtmEngine.current && isRtmLoggedIn) {
         console.log('✅ RTM available - data ready to be sent via RTM');
         // TODO: Implement actual RTM message sending when needed
       } else {
-        console.log('ℹ️ RTM not available - data logged untuk debugging purposes');
+        console.log(
+          'ℹ️ RTM not available - data logged untuk debugging purposes'
+        );
       }
-      
+
       // Hanya tampilkan notifikasi jika RTM benar-benar aktif
       if (isRtmLoggedIn) {
         Snackbar.show({
           text: '📤 Data Nasabah Siap - Data nasabah telah disiapkan untuk dikirim ke agent',
           duration: Snackbar.LENGTH_SHORT,
           backgroundColor: '#2196F3',
-          textColor: '#FFFFFF'
+          textColor: '#FFFFFF',
         });
       }
-      
     } catch (error: any) {
       console.log('⚠️ Error preparing customer data:', error);
       // Tidak tampilkan snackbar error untuk ini karena bukan critical error
@@ -294,7 +337,8 @@ export default function VerificationVideoCall() {
     setSelectedChannel(channelId);
     setChannelInput(channelId);
     // Set customer service name berdasarkan channel yang dipilih
-    const customerService = customerServiceData[channelId as keyof typeof customerServiceData];
+    const customerService =
+      customerServiceData[channelId as keyof typeof customerServiceData];
     if (customerService) {
       setCustomerName(customerService.name);
     }
@@ -312,7 +356,7 @@ export default function VerificationVideoCall() {
     // Reset refs ketika video call dimulai
     isInCallRef.current = false;
     isUpdatingRef.current = false;
-    
+
     // Kirim data nasabah setelah delay singkat untuk memastikan channel sudah ready
     setTimeout(() => {
       sendCustomerDataToAgent();
@@ -367,7 +411,7 @@ export default function VerificationVideoCall() {
         text: '⚠️ Input Error - Nama channel harus diisi',
         duration: Snackbar.LENGTH_SHORT,
         backgroundColor: '#FF9800',
-        textColor: '#FFFFFF'
+        textColor: '#FFFFFF',
       });
       return;
     }
@@ -377,7 +421,7 @@ export default function VerificationVideoCall() {
         text: '⚠️ Input Error - RTC Token untuk video call harus diisi',
         duration: Snackbar.LENGTH_SHORT,
         backgroundColor: '#FF9800',
-        textColor: '#FFFFFF'
+        textColor: '#FFFFFF',
       });
       return;
     }
@@ -387,7 +431,7 @@ export default function VerificationVideoCall() {
         text: '⚠️ Input Error - RTM Token untuk messaging harus diisi',
         duration: Snackbar.LENGTH_SHORT,
         backgroundColor: '#FF9800',
-        textColor: '#FFFFFF'
+        textColor: '#FFFFFF',
       });
       return;
     }
@@ -408,7 +452,7 @@ export default function VerificationVideoCall() {
       text: `✅ Custom Channel Set - Berhasil setup custom channel: ${tempChannel.trim()}`,
       duration: Snackbar.LENGTH_SHORT,
       backgroundColor: '#4CAF50',
-      textColor: '#FFFFFF'
+      textColor: '#FFFFFF',
     });
 
     // Initialize RTM dengan token yang valid
@@ -422,7 +466,7 @@ export default function VerificationVideoCall() {
     setCurrentStep('video-call');
     setVideoCall(true);
     setIsInCall(false);
-    
+
     // Kirim data nasabah setelah delay singkat untuk memastikan RTM ready
     setTimeout(() => {
       sendCustomerDataToAgent();
@@ -438,53 +482,57 @@ export default function VerificationVideoCall() {
   };
 
   // Updated connectionData to use custom RTC token if available
-  const connectionData: ConnectionData & {token: string} = {
+  const connectionData: ConnectionData & { token: string } = {
     appId: appId,
     channel: channelInput,
-    token: videoCallData.isUsingCustom && videoCallData.customRtcToken ? videoCallData.customRtcToken : token,
+    token:
+      videoCallData.isUsingCustom && videoCallData.customRtcToken
+        ? videoCallData.customRtcToken
+        : token,
   };
 
-
-
   // Callbacks dengan safe state updates dan error handling
-  const callbacks = useMemo(() => ({
-    EndCall: () => {
-      console.log('EndCall triggered');
-      setTimeout(() => {
-        setVideoCall(false);
-        setIsInCall(false);
-        router.back();
-      }, 0);
-    },
-    
-    StartCall: () => {
-      console.log('StartCall triggered');
-      setTimeout(() => setIsInCall(true), 0);
-    },
+  const callbacks = useMemo(
+    () => ({
+      EndCall: () => {
+        console.log('EndCall triggered');
+        setTimeout(() => {
+          setVideoCall(false);
+          setIsInCall(false);
+          router.back();
+        }, 0);
+      },
 
-    UserJoined: () => {
-      console.log('UserJoined triggered');
-      setTimeout(() => {
-        setIsInCall(true);
-        // Kirim data nasabah ketika ada agent yang join
-        sendCustomerDataToAgent();
-      }, 1000); // Delay sedikit untuk memastikan RTM channel ready
-    },
+      StartCall: () => {
+        console.log('StartCall triggered');
+        setTimeout(() => setIsInCall(true), 0);
+      },
 
-    JoinChannelSuccess: () => {
-      console.log('JoinChannelSuccess triggered');
-      setTimeout(() => {
-        setIsInCall(true);
-        // Kirim data nasabah ketika berhasil join channel
-        sendCustomerDataToAgent();
-      }, 1000); // Delay sedikit untuk memastikan RTM channel ready
-    },
+      UserJoined: () => {
+        console.log('UserJoined triggered');
+        setTimeout(() => {
+          setIsInCall(true);
+          // Kirim data nasabah ketika ada agent yang join
+          sendCustomerDataToAgent();
+        }, 1000); // Delay sedikit untuk memastikan RTM channel ready
+      },
 
-    // Tambahkan error handler
-    Error: (error: any) => {
-      console.log('Agora Error:', error);
-    },
-  }), [router, sendCustomerDataToAgent]);
+      JoinChannelSuccess: () => {
+        console.log('JoinChannelSuccess triggered');
+        setTimeout(() => {
+          setIsInCall(true);
+          // Kirim data nasabah ketika berhasil join channel
+          sendCustomerDataToAgent();
+        }, 1000); // Delay sedikit untuk memastikan RTM channel ready
+      },
+
+      // Tambahkan error handler
+      Error: (error: any) => {
+        console.log('Agora Error:', error);
+      },
+    }),
+    [router, sendCustomerDataToAgent]
+  );
 
   // Loading/Connecting Screen
   if (currentStep === 'connecting') {
@@ -495,20 +543,25 @@ export default function VerificationVideoCall() {
           contentContainerStyle={styles.scrollContent}
         >
           <ScreenHeader
-            title="Menghubungkan"
-            subheading="Mohon tunggu sebentar, kami sedang menghubungkan Anda dengan sistem video call"
+            title='Menghubungkan'
+            subheading='Mohon tunggu sebentar, kami sedang menghubungkan Anda dengan sistem video call'
           />
 
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#007bff" />
-            <ThemedText style={styles.loadingText}>{connectionStatus}</ThemedText>
+            <ActivityIndicator size='large' color='#007bff' />
+            <ThemedText style={styles.loadingText}>
+              {connectionStatus}
+            </ThemedText>
             <ThemedText style={styles.loadingSubtext}>
               Memverifikasi koneksi internet Anda...
             </ThemedText>
           </View>
         </ScrollView>
 
-        <TouchableOpacity style={styles.cancelButton} onPress={showCancelActionSheet}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={showCancelActionSheet}
+        >
           <ThemedText style={styles.cancelButtonText}>Batalkan</ThemedText>
         </TouchableOpacity>
 
@@ -523,11 +576,12 @@ export default function VerificationVideoCall() {
             <ThemedText style={styles.actionSheetTitle}>
               Batalkan Verifikasi Video Call?
             </ThemedText>
-            
+
             <ThemedText style={styles.actionSheetMessage}>
-              Jika Anda memilih "Ya", proses verifikasi akan direset dan Anda akan kembali ke awal. Semua data yang telah diisi akan hilang.
+              Jika Anda memilih "Ya", proses verifikasi akan direset dan Anda
+              akan kembali ke awal. Semua data yang telah diisi akan hilang.
             </ThemedText>
-            
+
             <TouchableOpacity
               style={[styles.actionSheetButton, styles.confirmCancelButton]}
               onPress={() => handleActionSheetPress('confirm-cancel')}
@@ -536,7 +590,7 @@ export default function VerificationVideoCall() {
                 Ya, Batalkan
               </ThemedText>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.actionSheetButton}
               onPress={() => actionSheetRef.current?.hide()}
@@ -560,34 +614,46 @@ export default function VerificationVideoCall() {
           contentContainerStyle={styles.scrollContent}
         >
           <ScreenHeader
-            title="Customer Service"
-            subheading="Silakan pilih customer service yang tersedia untuk melanjutkan verifikasi"
+            title='Customer Service'
+            subheading='Silakan pilih customer service yang tersedia untuk melanjutkan verifikasi'
           />
 
           <View style={styles.channelList}>
-            {availableChannels.map((channel) => (
+            {availableChannels.map(channel => (
               <TouchableOpacity
                 key={channel.id}
-                                 style={[
-                   styles.channelItem,
-                   (channel.status === 'busy' || channel.status === 'offline') && styles.channelItemBusy
-                 ]}
-                 onPress={() => handleChannelSelect(channel.id)}
-                 disabled={channel.status === 'busy' || channel.status === 'offline'}
+                style={[
+                  styles.channelItem,
+                  (channel.status === 'busy' || channel.status === 'offline') &&
+                    styles.channelItemBusy,
+                ]}
+                onPress={() => handleChannelSelect(channel.id)}
+                disabled={
+                  channel.status === 'busy' || channel.status === 'offline'
+                }
               >
-                                 <View style={styles.channelInfo}>
-                   <View style={styles.agentRow}>
-                     <ThemedText style={styles.channelName}>{channel.name}</ThemedText>
-                     <View style={styles.statusRow}>
-                       <View style={[
-                         styles.statusDot,
-                         channel.status === 'available' ? styles.statusOnline : 
-                         channel.status === 'busy' ? styles.statusBusy : styles.statusOffline
-                       ]} />
-                       <ThemedText style={styles.channelAgent}>{channel.agent}</ThemedText>
-                     </View>
-                   </View>
-                 </View>
+                <View style={styles.channelInfo}>
+                  <View style={styles.agentRow}>
+                    <ThemedText style={styles.channelName}>
+                      {channel.name}
+                    </ThemedText>
+                    <View style={styles.statusRow}>
+                      <View
+                        style={[
+                          styles.statusDot,
+                          channel.status === 'available'
+                            ? styles.statusOnline
+                            : channel.status === 'busy'
+                              ? styles.statusBusy
+                              : styles.statusOffline,
+                        ]}
+                      />
+                      <ThemedText style={styles.channelAgent}>
+                        {channel.agent}
+                      </ThemedText>
+                    </View>
+                  </View>
+                </View>
               </TouchableOpacity>
             ))}
 
@@ -598,7 +664,9 @@ export default function VerificationVideoCall() {
             >
               <View style={styles.channelInfo}>
                 <View style={styles.agentRow}>
-                  <ThemedText style={styles.channelName}>📺 Input Custom Channel</ThemedText>
+                  <ThemedText style={styles.channelName}>
+                    📺 Input Custom Channel
+                  </ThemedText>
                   <View style={styles.statusRow}>
                     <View style={[styles.statusDot, styles.statusCustom]} />
                     <ThemedText style={styles.channelAgent}>Custom</ThemedText>
@@ -609,7 +677,10 @@ export default function VerificationVideoCall() {
           </View>
         </ScrollView>
 
-        <TouchableOpacity style={styles.cancelButton} onPress={showCancelActionSheet}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={showCancelActionSheet}
+        >
           <ThemedText style={styles.cancelButtonText}>Batalkan</ThemedText>
         </TouchableOpacity>
 
@@ -624,11 +695,12 @@ export default function VerificationVideoCall() {
             <ThemedText style={styles.actionSheetTitle}>
               Batalkan Verifikasi Video Call?
             </ThemedText>
-            
+
             <ThemedText style={styles.actionSheetMessage}>
-              Jika Anda memilih "Ya", proses verifikasi akan direset dan Anda akan kembali ke awal. Semua data yang telah diisi akan hilang.
+              Jika Anda memilih "Ya", proses verifikasi akan direset dan Anda
+              akan kembali ke awal. Semua data yang telah diisi akan hilang.
             </ThemedText>
-            
+
             <TouchableOpacity
               style={[styles.actionSheetButton, styles.confirmCancelButton]}
               onPress={() => handleActionSheetPress('confirm-cancel')}
@@ -637,7 +709,7 @@ export default function VerificationVideoCall() {
                 Ya, Batalkan
               </ThemedText>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.actionSheetButton}
               onPress={() => actionSheetRef.current?.hide()}
@@ -661,48 +733,53 @@ export default function VerificationVideoCall() {
             <ThemedText style={styles.actionSheetTitle}>
               Input Custom Channel
             </ThemedText>
-            
+
             <ThemedText style={styles.actionSheetMessage}>
-              Masukkan nama channel, RTC token (video call), dan RTM token (messaging)
+              Masukkan nama channel, RTC token (video call), dan RTM token
+              (messaging)
             </ThemedText>
-            
+
             <View style={styles.inputContainer}>
               <ThemedText style={styles.inputLabel}>Nama Channel:</ThemedText>
               <TextInput
                 style={styles.actionSheetInput}
-                placeholder="Masukkan nama channel"
+                placeholder='Masukkan nama channel'
                 value={tempChannel}
                 onChangeText={setTempChannel}
-                autoCapitalize="none"
+                autoCapitalize='none'
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.inputLabel}>RTC Token (Video Call):</ThemedText>
+              <ThemedText style={styles.inputLabel}>
+                RTC Token (Video Call):
+              </ThemedText>
               <TextInput
                 style={[styles.actionSheetInput, styles.tokenInput]}
-                placeholder="007eJxT... (dari Agora Console → RTC Token)"
+                placeholder='007eJxT... (dari Agora Console → RTC Token)'
                 value={tempRtcToken}
                 onChangeText={setTempRtcToken}
                 multiline={true}
                 numberOfLines={2}
-                autoCapitalize="none"
+                autoCapitalize='none'
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.inputLabel}>RTM Token (Messaging):</ThemedText>
+              <ThemedText style={styles.inputLabel}>
+                RTM Token (Messaging):
+              </ThemedText>
               <TextInput
                 style={[styles.actionSheetInput, styles.tokenInput]}
-                placeholder="007eJxT... (dari Agora Console → RTM Token)"
+                placeholder='007eJxT... (dari Agora Console → RTM Token)'
                 value={tempRtmToken}
                 onChangeText={setTempRtmToken}
                 multiline={true}
                 numberOfLines={2}
-                autoCapitalize="none"
+                autoCapitalize='none'
               />
             </View>
-            
+
             <TouchableOpacity
               style={[styles.actionSheetButton, styles.confirmButton]}
               onPress={handleCustomChannelSubmit}
@@ -711,7 +788,7 @@ export default function VerificationVideoCall() {
                 Join Channel
               </ThemedText>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.actionSheetButton}
               onPress={handleCustomChannelCancel}
@@ -734,43 +811,48 @@ export default function VerificationVideoCall() {
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}
         >
-                  <ScreenHeader
-          title={`${getSelectedChannelInfo()?.name || 'Customer Service'}`}
-          subheading="Sebelum memulai video call, pastikan Anda siap untuk verifikasi"
-        />
+          <ScreenHeader
+            title={`${getSelectedChannelInfo()?.name || 'Customer Service'}`}
+            subheading='Sebelum memulai video call, pastikan Anda siap untuk verifikasi'
+          />
 
-        <View style={styles.preCallContainer}>
-          <View style={styles.customerInfoContainer}>
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <ThemedText style={styles.avatarText}>👩‍💼</ThemedText>
+          <View style={styles.preCallContainer}>
+            <View style={styles.customerInfoContainer}>
+              <View style={styles.avatarContainer}>
+                <View style={styles.avatar}>
+                  <ThemedText style={styles.avatarText}>👩‍💼</ThemedText>
+                </View>
               </View>
+              <ThemedText style={styles.customerName}>
+                {customerName}
+              </ThemedText>
+              <ThemedText style={styles.customerSubtext}>
+                {customerServiceData[
+                  selectedChannel as keyof typeof customerServiceData
+                ]?.type || 'Customer Service'}
+              </ThemedText>
             </View>
-            <ThemedText style={styles.customerName}>{customerName}</ThemedText>
-            <ThemedText style={styles.customerSubtext}>
-              {customerServiceData[selectedChannel as keyof typeof customerServiceData]?.type || 'Customer Service'}
-            </ThemedText>
-          </View>
 
-          <View style={styles.infoCard}>
-            <ThemedText style={styles.infoText}>
-              • Pastikan koneksi internet Anda stabil{'\n'}
-              • Pastikan kamera dan mikrofon berfungsi{'\n'}
-              • Siapkan dokumen yang diperlukan{'\n'}
-              • Tunggu agen customer service bergabung
-            </ThemedText>
+            <View style={styles.infoCard}>
+              <ThemedText style={styles.infoText}>
+                • Pastikan koneksi internet Anda stabil{'\n'}• Pastikan kamera
+                dan mikrofon berfungsi{'\n'}• Siapkan dokumen yang diperlukan
+                {'\n'}• Tunggu agen customer service bergabung
+              </ThemedText>
+            </View>
           </View>
-
-        </View>
         </ScrollView>
 
         <View style={styles.buttonContainer}>
           <GradientButton
-            title="Mulai Video Call"
+            title='Mulai Video Call'
             onPress={handleStartVideoCall}
             style={styles.startCallButton}
           />
-          <TouchableOpacity style={styles.backButtonPreCall} onPress={handleBack}>
+          <TouchableOpacity
+            style={styles.backButtonPreCall}
+            onPress={handleBack}
+          >
             <ThemedText style={styles.backButtonText}>Kembali</ThemedText>
           </TouchableOpacity>
         </View>
@@ -786,11 +868,12 @@ export default function VerificationVideoCall() {
             <ThemedText style={styles.actionSheetTitle}>
               Batalkan Verifikasi Video Call?
             </ThemedText>
-            
+
             <ThemedText style={styles.actionSheetMessage}>
-              Jika Anda memilih "Ya", proses verifikasi akan direset dan Anda akan kembali ke awal. Semua data yang telah diisi akan hilang.
+              Jika Anda memilih "Ya", proses verifikasi akan direset dan Anda
+              akan kembali ke awal. Semua data yang telah diisi akan hilang.
             </ThemedText>
-            
+
             <TouchableOpacity
               style={[styles.actionSheetButton, styles.confirmCancelButton]}
               onPress={() => handleActionSheetPress('confirm-cancel')}
@@ -799,7 +882,7 @@ export default function VerificationVideoCall() {
                 Ya, Batalkan
               </ThemedText>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.actionSheetButton}
               onPress={() => actionSheetRef.current?.hide()}
@@ -831,7 +914,7 @@ export default function VerificationVideoCall() {
             />
           </AgoraErrorBoundary>
         </View>
-        
+
         {/* Channel Info Overlay - Only show when not in call */}
         {!isInCall && videoCall && (
           <View style={styles.overlay}>
@@ -847,8 +930,13 @@ export default function VerificationVideoCall() {
         {/* Cancel Button at Bottom - Only show when not in call */}
         {!isInCall && videoCall && (
           <View style={styles.overlayBottomContainer}>
-            <TouchableOpacity style={styles.overlayCancelButton} onPress={handleBack}>
-              <ThemedText style={styles.overlayCancelButtonText}>Batalkan</ThemedText>
+            <TouchableOpacity
+              style={styles.overlayCancelButton}
+              onPress={handleBack}
+            >
+              <ThemedText style={styles.overlayCancelButtonText}>
+                Batalkan
+              </ThemedText>
             </TouchableOpacity>
           </View>
         )}
@@ -862,7 +950,7 @@ export default function VerificationVideoCall() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
     flex: 1,
@@ -1037,7 +1125,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   cancelButton: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 30,
     left: 20,
     right: 20,
@@ -1052,7 +1140,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   buttonContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 30,
     left: 20,
     right: 20,
@@ -1120,10 +1208,10 @@ const styles = StyleSheet.create({
   actionSheetContainer: {
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
   },
   actionSheetIndicator: {
-    backgroundColor: "#e0e0e0",
+    backgroundColor: '#e0e0e0',
     width: 40,
     height: 4,
   },
@@ -1133,42 +1221,42 @@ const styles = StyleSheet.create({
   },
   actionSheetTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
+    fontWeight: '600',
+    textAlign: 'center',
     marginBottom: 15,
-    color: "#2c3e50",
+    color: '#2c3e50',
   },
   actionSheetMessage: {
     fontSize: 14,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 20,
-    color: "#7f8c8d",
+    color: '#7f8c8d',
     lineHeight: 20,
   },
   actionSheetButton: {
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 12,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: '#f8f9fa',
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#e9ecef",
+    borderColor: '#e9ecef',
   },
   actionSheetButtonText: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#2c3e50",
-    textAlign: "center",
+    fontWeight: '500',
+    color: '#2c3e50',
+    textAlign: 'center',
   },
   confirmCancelButton: {
-    backgroundColor: "#dc3545",
-    borderColor: "#dc3545",
+    backgroundColor: '#dc3545',
+    borderColor: '#dc3545',
   },
   confirmCancelButtonText: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#ffffff",
-    textAlign: "center",
+    fontWeight: '500',
+    color: '#ffffff',
+    textAlign: 'center',
   },
 
   // Custom Channel Form Styles
@@ -1177,31 +1265,31 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 5,
-    color: "#2c3e50",
+    color: '#2c3e50',
   },
   actionSheetInput: {
     borderWidth: 1,
-    borderColor: "#e9ecef",
+    borderColor: '#e9ecef',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    backgroundColor: "#f8f9fa",
-    color: "#2c3e50",
+    backgroundColor: '#f8f9fa',
+    color: '#2c3e50',
   },
   tokenInput: {
     height: 80,
     textAlignVertical: 'top',
   },
   confirmButton: {
-    backgroundColor: "#007bff",
-    borderColor: "#007bff",
+    backgroundColor: '#007bff',
+    borderColor: '#007bff',
   },
   confirmButtonText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#ffffff",
-    textAlign: "center",
+    fontWeight: '600',
+    color: '#ffffff',
+    textAlign: 'center',
   },
 });

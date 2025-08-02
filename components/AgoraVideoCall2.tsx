@@ -2,21 +2,22 @@ import RtmEngine from 'agora-react-native-rtm';
 import AgoraUIKit, { ConnectionData } from 'agora-rn-uikit';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Alert,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 // Configuration - Replace with your actual Agora credentials
 const agoraConfig = {
   appId: '91e678602eb04e7fa9ec37f6575fa9c2', // Replace with your App ID
   channelName: 'test-channel', // Default channel name
-  token: "007eJxTYEiLtLn0+hyT56bD9q/8L21u27yOhY/1/SUmkWUR3BGcM80UGCwNU83MLcwMjFKTDExSzdMSLVOTjc3TzEzNTYHsZCP+j10ZDYGMDAIflRgZGSAQxOdhKEktLtFNzkjMy0vNYWAAAPWVIPk=", // Use null for testing, add your token for production
+  token:
+    '007eJxTYEiLtLn0+hyT56bD9q/8L21u27yOhY/1/SUmkWUR3BGcM80UGCwNU83MLcwMjFKTDExSzdMSLVOTjc3TzEzNTYHsZCP+j10ZDYGMDAIflRgZGSAQxOdhKEktLtFNzkjMy0vNYWAAAPWVIPk=', // Use null for testing, add your token for production
   uid: 0, // Use 0 to auto-generate UID
 };
 
@@ -36,7 +37,7 @@ const AgoraVideoCall2 = () => {
   useEffect(() => {
     // Skip RTM initialization to avoid token errors
     // initRTM();
-    
+
     return () => {
       // Cleanup RTM
       cleanupRTM();
@@ -66,7 +67,7 @@ const AgoraVideoCall2 = () => {
     }
   };
 
-  const connectionData: ConnectionData & {token: string} = {
+  const connectionData: ConnectionData & { token: string } = {
     appId: appId,
     channel: channelInput,
     token,
@@ -78,7 +79,7 @@ const AgoraVideoCall2 = () => {
       setVideoCall(false);
       setIsInCall(false);
     },
-    
+
     StartCall: () => {
       setIsInCall(true);
     },
@@ -89,35 +90,45 @@ const AgoraVideoCall2 = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.setupContainer}>
           <Text style={styles.title}>Agora Video Call Setup</Text>
-          
+
           <TextInput
             style={styles.input}
-            placeholder="Enter Channel Name"
+            placeholder='Enter Channel Name'
             value={channelInput}
             onChangeText={setChannelInput}
           />
-          
+
           <View style={styles.roleContainer}>
             <TouchableOpacity
               style={[styles.roleButton, isHost && styles.activeRole]}
               onPress={() => setIsHost(true)}
             >
-              <Text style={[styles.roleText, isHost && styles.activeRoleText]}>Host</Text>
+              <Text style={[styles.roleText, isHost && styles.activeRoleText]}>
+                Host
+              </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.roleButton, !isHost && styles.activeRole]}
               onPress={() => setIsHost(false)}
             >
-              <Text style={[styles.roleText, !isHost && styles.activeRoleText]}>Audience</Text>
+              <Text style={[styles.roleText, !isHost && styles.activeRoleText]}>
+                Audience
+              </Text>
             </TouchableOpacity>
           </View>
-          
+
           <TouchableOpacity
             style={styles.joinButton}
             onPress={() => {
-              if (!agoraConfig.appId || agoraConfig.appId === 'YOUR_AGORA_APP_ID') {
-                Alert.alert('Configuration Required', 'Please replace YOUR_AGORA_APP_ID with your actual Agora App ID');
+              if (
+                !agoraConfig.appId ||
+                agoraConfig.appId === 'YOUR_AGORA_APP_ID'
+              ) {
+                Alert.alert(
+                  'Configuration Required',
+                  'Please replace YOUR_AGORA_APP_ID with your actual Agora App ID'
+                );
                 return;
               }
               setVideoCall(true);
@@ -125,19 +136,21 @@ const AgoraVideoCall2 = () => {
           >
             <Text style={styles.joinButtonText}>Join Video Call</Text>
           </TouchableOpacity>
-          
+
           <View style={styles.messageContainer}>
             <Text style={styles.messageTitle}>Chat Messages:</Text>
             <View style={styles.messagesBox}>
               {messages.map((msg, index) => (
-                <Text key={index} style={styles.message}>{msg}</Text>
+                <Text key={index} style={styles.message}>
+                  {msg}
+                </Text>
               ))}
             </View>
-            
+
             <View style={styles.messageInputContainer}>
               <TextInput
                 style={styles.messageInput}
-                placeholder="Type a message..."
+                placeholder='Type a message...'
                 value={messageInput}
                 onChangeText={setMessageInput}
                 onSubmitEditing={sendMessage}
@@ -154,15 +167,14 @@ const AgoraVideoCall2 = () => {
 
   return (
     <SafeAreaView style={styles.fullScreen}>
-      <AgoraUIKit
-        connectionData={connectionData}
-        rtcCallbacks={callbacks}
-      />
-      
+      <AgoraUIKit connectionData={connectionData} rtcCallbacks={callbacks} />
+
       {/* Channel Info Overlay */}
       <View style={styles.overlay}>
         <Text style={styles.channelInfo}>Channel: {channelInput}</Text>
-        <Text style={styles.statusInfo}>{isInCall ? 'In Call' : 'Connecting...'}</Text>
+        <Text style={styles.statusInfo}>
+          {isInCall ? 'In Call' : 'Connecting...'}
+        </Text>
       </View>
     </SafeAreaView>
   );

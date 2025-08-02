@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import {
   ChannelProfile,
@@ -14,7 +14,7 @@ import {
   RtcEngine,
   RtcLocalView,
   RtcRemoteView,
-  VideoRenderMode
+  VideoRenderMode,
 } from 'react-native-agora';
 
 /** @deprecated use AgoraVideoCall2 instead */
@@ -39,20 +39,24 @@ const AgoraVideoCall = () => {
         engine.destroy();
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const requestPermissionsAndInit = async () => {
     try {
       console.log('Requesting Android permissions...');
-      
+
       // First check current permission status
-      const cameraStatus = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
-      const audioStatus = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
-      
-      console.log('Current permissions status:', { 
-        camera: cameraStatus, 
-        audio: audioStatus 
+      const cameraStatus = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.CAMERA
+      );
+      const audioStatus = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+      );
+
+      console.log('Current permissions status:', {
+        camera: cameraStatus,
+        audio: audioStatus,
       });
 
       if (cameraStatus && audioStatus) {
@@ -90,19 +94,24 @@ const AgoraVideoCall = () => {
 
       console.log('Audio permission result:', audioPermission);
 
-      const cameraGranted = cameraPermission === PermissionsAndroid.RESULTS.GRANTED;
-      const audioGranted = audioPermission === PermissionsAndroid.RESULTS.GRANTED;
+      const cameraGranted =
+        cameraPermission === PermissionsAndroid.RESULTS.GRANTED;
+      const audioGranted =
+        audioPermission === PermissionsAndroid.RESULTS.GRANTED;
 
-      console.log('Final permission status:', { 
-        camera: cameraGranted, 
-        audio: audioGranted 
+      console.log('Final permission status:', {
+        camera: cameraGranted,
+        audio: audioGranted,
       });
 
       if (cameraGranted && audioGranted) {
         console.log('All permissions granted, initializing Agora...');
         await initAgora();
       } else {
-        console.log('Permissions denied:', { camera: cameraGranted, audio: audioGranted });
+        console.log('Permissions denied:', {
+          camera: cameraGranted,
+          audio: audioGranted,
+        });
         Alert.alert(
           'Permissions Required',
           `Permissions status:\nCamera: ${cameraGranted ? 'Granted' : 'Denied'}\nMicrophone: ${audioGranted ? 'Granted' : 'Denied'}\n\nBoth permissions are required for video calling.`,
@@ -111,7 +120,9 @@ const AgoraVideoCall = () => {
               text: 'Open Settings',
               onPress: () => {
                 // You can add Linking.openSettings() here if needed
-                console.log('User should manually enable permissions in settings');
+                console.log(
+                  'User should manually enable permissions in settings'
+                );
               },
             },
             {
@@ -131,7 +142,10 @@ const AgoraVideoCall = () => {
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      Alert.alert('Permission Error', `Failed to request permissions: ${errorMessage}`);
+      Alert.alert(
+        'Permission Error',
+        `Failed to request permissions: ${errorMessage}`
+      );
     }
   };
 
@@ -140,20 +154,24 @@ const AgoraVideoCall = () => {
       console.log('Initializing Agora with APP_ID:', APP_ID);
       console.log('APP_ID length:', APP_ID.length);
       console.log('APP_ID format check:', /^[a-f0-9]{32}$/.test(APP_ID));
-      
+
       // Validate APP_ID format (should be 32 character hex string)
       if (!APP_ID || APP_ID.length !== 32) {
-        throw new Error(`Invalid APP_ID format. Expected 32 characters, got ${APP_ID.length}`);
+        throw new Error(
+          `Invalid APP_ID format. Expected 32 characters, got ${APP_ID.length}`
+        );
       }
 
       if (!/^[a-f0-9]{32}$/.test(APP_ID)) {
-        throw new Error('APP_ID should contain only lowercase hex characters (a-f, 0-9)');
+        throw new Error(
+          'APP_ID should contain only lowercase hex characters (a-f, 0-9)'
+        );
       }
 
       console.log('APP_ID validation passed, creating RtcEngine...');
       const rtcEngine = await RtcEngine.create(APP_ID);
       console.log('RtcEngine created successfully');
-      
+
       // Add event listeners first
       rtcEngine.addListener('UserJoined', (uid: number) => {
         console.log('UserJoined', uid);
@@ -179,9 +197,12 @@ const AgoraVideoCall = () => {
         setRemoteUid(null);
       });
 
-      rtcEngine.addListener('Error', (error: { code: number; message: string }) => {
-        console.log('Agora Error:', error);
-      });
+      rtcEngine.addListener(
+        'Error',
+        (error: { code: number; message: string }) => {
+          console.log('Agora Error:', error);
+        }
+      );
 
       rtcEngine.addListener('Warning', (warning: number) => {
         console.log('Agora Warning:', warning);
@@ -190,11 +211,11 @@ const AgoraVideoCall = () => {
       // Enable video
       await rtcEngine.enableVideo();
       console.log('Video enabled');
-      
+
       // Set channel profile to communication
       await rtcEngine.setChannelProfile(ChannelProfile.Communication);
       console.log('Channel profile set');
-      
+
       // Set client role to broadcaster
       await rtcEngine.setClientRole(ClientRole.Broadcaster);
       console.log('Client role set');
@@ -208,13 +229,13 @@ const AgoraVideoCall = () => {
         // @ts-ignore
         console.error('Error code:', (error as any).code);
         Alert.alert(
-          'Agora Initialization Error', 
+          'Agora Initialization Error',
           `${error.message}\n\nPlease verify:\n1. APP_ID is correct and active\n2. Project has Agora services enabled\n3. Network connectivity is working\n\nCurrent APP_ID: ${APP_ID.substring(0, 8)}...`
         );
       } else {
         console.error('Error details:', error);
         Alert.alert(
-          'Agora Initialization Error', 
+          'Agora Initialization Error',
           `Unknown error occurred. Please check the logs for more details.\n\nCurrent APP_ID: ${APP_ID.substring(0, 8)}...`
         );
       }
@@ -225,10 +246,13 @@ const AgoraVideoCall = () => {
     console.log('Join channel button pressed');
     console.log('Engine state:', engine ? 'Available' : 'Not available');
     console.log('Current joined state:', joined);
-    
+
     if (!engine) {
       console.log('Engine not initialized, cannot join channel');
-      Alert.alert('Error', 'Agora engine not initialized. Please restart the app.');
+      Alert.alert(
+        'Error',
+        'Agora engine not initialized. Please restart the app.'
+      );
       return;
     }
 
@@ -236,35 +260,43 @@ const AgoraVideoCall = () => {
       console.log('Attempting to join channel:', CHANNEL_NAME);
       console.log('Using TOKEN:', TOKEN);
       console.log('APP_ID:', APP_ID);
-      
+
       // Add a small delay to ensure engine is fully ready
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       const result = await engine.joinChannel(TOKEN, CHANNEL_NAME, null, 0);
       console.log('Join channel result:', result);
-      
+
       // Set a timeout to check if we actually joined
       setTimeout(() => {
         if (!joined) {
           console.log('Join timeout - still not joined after 10 seconds');
-          Alert.alert('Warning', 'Taking longer than expected to join channel. Check your network connection.');
+          Alert.alert(
+            'Warning',
+            'Taking longer than expected to join channel. Check your network connection.'
+          );
         }
       }, 10000);
-      
     } catch (error) {
       console.error('Error joining channel:', error);
       if (error instanceof Error) {
         console.error('Error details:', error.message);
-        Alert.alert('Join Channel Error', `Failed to join channel: ${error.message}`);
+        Alert.alert(
+          'Join Channel Error',
+          `Failed to join channel: ${error.message}`
+        );
       } else {
-        Alert.alert('Join Channel Error', 'Failed to join channel due to an unknown error.');
+        Alert.alert(
+          'Join Channel Error',
+          'Failed to join channel due to an unknown error.'
+        );
       }
     }
   };
 
   const leaveChannel = async () => {
     console.log('Leave channel button pressed');
-    
+
     if (!engine) {
       console.log('Engine not available for leaving channel');
       return;
@@ -279,7 +311,10 @@ const AgoraVideoCall = () => {
       if (error instanceof Error) {
         Alert.alert('Error', `Failed to leave channel: ${error.message}`);
       } else {
-        Alert.alert('Error', 'Failed to leave channel due to an unknown error.');
+        Alert.alert(
+          'Error',
+          'Failed to leave channel due to an unknown error.'
+        );
       }
     }
   };
@@ -326,7 +361,7 @@ const AgoraVideoCall = () => {
             renderMode={VideoRenderMode.Hidden}
           />
         )}
-        
+
         {remoteUid && (
           <RtcRemoteView.SurfaceView
             style={styles.remoteVideo}
@@ -335,7 +370,7 @@ const AgoraVideoCall = () => {
             renderMode={VideoRenderMode.Hidden}
           />
         )}
-        
+
         {!joined && !remoteUid && (
           <View style={styles.placeholder}>
             <Text style={styles.placeholderText}>
@@ -351,15 +386,17 @@ const AgoraVideoCall = () => {
             style={[styles.button, styles.permissionButton]}
             onPress={requestPermissionsAndInit}
           >
-            <Text style={styles.buttonText}>Request Permissions & Initialize</Text>
+            <Text style={styles.buttonText}>
+              Request Permissions & Initialize
+            </Text>
           </TouchableOpacity>
         )}
-        
+
         <TouchableOpacity
           style={[
-            styles.button, 
+            styles.button,
             joined ? styles.leaveButton : styles.joinButton,
-            !engine && styles.disabledButton
+            !engine && styles.disabledButton,
           ]}
           onPress={joined ? leaveChannel : joinChannel}
           disabled={!engine}
@@ -374,7 +411,7 @@ const AgoraVideoCall = () => {
             <TouchableOpacity
               style={[
                 styles.controlButton,
-                !localVideoEnabled && styles.disabledButton
+                !localVideoEnabled && styles.disabledButton,
               ]}
               onPress={toggleLocalVideo}
             >
@@ -386,7 +423,7 @@ const AgoraVideoCall = () => {
             <TouchableOpacity
               style={[
                 styles.controlButton,
-                !localAudioEnabled && styles.disabledButton
+                !localAudioEnabled && styles.disabledButton,
               ]}
               onPress={toggleLocalAudio}
             >

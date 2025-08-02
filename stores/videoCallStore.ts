@@ -8,34 +8,33 @@ const initialVideoCallData: VideoCallData = {
   isUsingCustom: false,
 };
 
-export const useVideoCallStore = create<VideoCallState>((set) => ({
+export const useVideoCallStore = create<VideoCallState>(set => ({
   videoCallData: initialVideoCallData,
-  
+
   setCustomChannel: (channel: string) =>
-    set((state) => ({
+    set(state => ({
       videoCallData: { ...state.videoCallData, customChannel: channel },
     })),
-  
+
   setCustomRtcToken: (token: string) =>
-    set((state) => ({
+    set(state => ({
       videoCallData: { ...state.videoCallData, customRtcToken: token },
     })),
-  
+
   setCustomRtmToken: (token: string) =>
-    set((state) => ({
+    set(state => ({
       videoCallData: { ...state.videoCallData, customRtmToken: token },
     })),
-  
+
   setVideoCallData: (data: Partial<VideoCallData>) =>
-    set((state) => ({
+    set(state => ({
       videoCallData: { ...state.videoCallData, ...data },
     })),
-  
+
   setIsUsingCustom: (isUsing: boolean) =>
-    set((state) => ({
+    set(state => ({
       videoCallData: { ...state.videoCallData, isUsingCustom: isUsing },
     })),
-  
-  resetVideoCallData: () =>
-    set({ videoCallData: initialVideoCallData }),
+
+  resetVideoCallData: () => set({ videoCallData: initialVideoCallData }),
 }));

@@ -32,7 +32,7 @@ export default function VerificationFace() {
           },
         },
       });
-      
+
       // Auto redirect after 3 seconds
       setTimeout(() => {
         Snackbar.dismiss();
@@ -48,16 +48,12 @@ export default function VerificationFace() {
         contentContainerStyle={styles.scrollContent}
       >
         <ScreenHeader
-          title="Verifikasi Wajah"
-          subheading="Posisikan wajah Anda di tengah kamera untuk memulai proses verifikasi"
+          title='Verifikasi Wajah'
+          subheading='Posisikan wajah Anda di tengah kamera untuk memulai proses verifikasi'
         />
 
-       
-
         <ThemedView style={styles.cameraPlaceholder}>
-          <ThemedText style={styles.placeholderIcon}>
-            📷
-          </ThemedText>
+          <ThemedText style={styles.placeholderIcon}>📷</ThemedText>
           <ThemedText style={styles.placeholderText}>
             {isScanning ? 'Memindai wajah...' : 'Kamera akan muncul di sini'}
           </ThemedText>
@@ -85,7 +81,7 @@ export default function VerificationFace() {
       </ScrollView>
 
       <GradientButton
-        title={isScanning ? "Memindai..." : "Mulai Verifikasi Wajah"}
+        title={isScanning ? 'Memindai...' : 'Mulai Verifikasi Wajah'}
         onPress={startFaceRecognition}
         style={[styles.nextButton, isScanning && styles.disabledButton]}
         disabled={isScanning}
@@ -97,7 +93,7 @@ export default function VerificationFace() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
     flex: 1,
@@ -108,56 +104,56 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Space for the fixed button
   },
   instructionContainer: {
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
     padding: 20,
     borderRadius: 12,
     marginBottom: 30,
     borderWidth: 1,
-    borderColor: "#e9ecef",
+    borderColor: '#e9ecef',
   },
   instructionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 15,
-    color: "#2c3e50",
+    color: '#2c3e50',
   },
   instruction: {
     fontSize: 14,
     marginBottom: 8,
-    color: "#2c3e50",
-    fontWeight: "400",
+    color: '#2c3e50',
+    fontWeight: '400',
   },
   cameraPlaceholder: {
     width: 250,
     height: 250,
-    marginHorizontal: "auto",
+    marginHorizontal: 'auto',
     borderRadius: 125,
     borderWidth: 2,
-    borderColor: "#FFD700",
-    justifyContent: "center",
-    alignItems: "center",
+    borderColor: '#FFD700',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 30,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
   },
   placeholderIcon: {
     fontSize: 48,
     marginBottom: 15,
   },
   placeholderText: {
-    color: "#2c3e50",
+    color: '#2c3e50',
     fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
+    fontWeight: '500',
+    textAlign: 'center',
     marginBottom: 5,
   },
   scanningText: {
-    color: "#FFD700",
+    color: '#FFD700',
     fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
+    fontWeight: '600',
+    textAlign: 'center',
   },
   nextButton: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 30,
     left: 20,
     right: 20,
