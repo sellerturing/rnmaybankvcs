@@ -56,7 +56,7 @@ const agoraConfig = {
   appId: '91e678602eb04e7fa9ec37f6575fa9c2', // Replace with your App ID
   channelName: 'test-channel', // Default channel name
   token:
-    '007eJxTYJi3ZeqbrjMdZ3Rb4mYmCWaVTF39Z3VH0vmffHePpE2MlO9QYLA0TDUztzAzMEpNMjBJNU9LtExNNjZPMzM1NwWyk40ON/dkNAQyMvxLbGRhZIBAEJ+HoSS1uEQ3OSMxLy81h4EBADy1JWU=', // Use null for testing, add your token for production
+    '007eJxTYGg8UbeKyyTNzneZSmx8fXPIi6ZJmpstv/kvMD5fbp03j1uBwdIw1czcwszAKDXJwCTVPC3RMjXZ2DzNzNTcFMhONsoL689oCGRkUGLsYmJkgEAQn4ehJLW4RDc5IzEvLzWHgQEAvP8gOQ==', // Use null for testing, add your token for production
   uid: 0, // Use 0 to auto-generate UID
 };
 
@@ -252,7 +252,7 @@ export default function VerificationVideoCall() {
         textColor: '#FFFFFF',
       });
     } catch (error: any) {
-      console.error('❌ RTM initialization error:', error);
+      // console.error('❌ RTM initialization error:', error);
       setIsRtmLoggedIn(false);
 
       // Hanya tampilkan error jika user benar-benar menggunakan RTM token
@@ -270,7 +270,13 @@ export default function VerificationVideoCall() {
           '⚠️ RTM not activated in Agora Console - this is optional for video calls'
         );
       } else {
-        console.error('❌ RTM Error:', error.message);
+        // console.error('❌ RTM Error:', error.message);
+        Snackbar.show({
+          text: '❌ RTM Error - RTM tidak dapat terhubung. Silakan coba lagi.',
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: '#FF9800',
+          textColor: '#FFFFFF',
+        });
       }
     }
   };
@@ -336,6 +342,12 @@ export default function VerificationVideoCall() {
   const handleChannelSelect = (channelId: string) => {
     setSelectedChannel(channelId);
     setChannelInput(channelId);
+
+    // Reset isUsingCustom ketika memilih predefined channel
+    setVideoCallData({
+      isUsingCustom: false,
+    });
+
     // Set customer service name berdasarkan channel yang dipilih
     const customerService =
       customerServiceData[channelId as keyof typeof customerServiceData];
@@ -377,6 +389,15 @@ export default function VerificationVideoCall() {
     setIsInCall(false);
     isInCallRef.current = false;
     isUpdatingRef.current = false;
+
+    // Reset video call store state
+    setVideoCallData({
+      isUsingCustom: false,
+      customChannel: '',
+      customRtcToken: '',
+      customRtmToken: '',
+    });
+
     // Kembali ke screen awal
     router.push('/verification-info');
   };
@@ -386,6 +407,11 @@ export default function VerificationVideoCall() {
     setCurrentStep('channel-select');
     setSelectedChannel('');
     setChannelInput(agoraConfig.channelName);
+
+    // Reset isUsingCustom ketika kembali ke channel selection
+    setVideoCallData({
+      isUsingCustom: false,
+    });
   };
 
   const handleActionSheetPress = (action: string) => {
@@ -426,15 +452,15 @@ export default function VerificationVideoCall() {
       return;
     }
 
-    if (!tempRtmToken.trim()) {
-      Snackbar.show({
-        text: '⚠️ Input Error - RTM Token untuk messaging harus diisi',
-        duration: Snackbar.LENGTH_SHORT,
-        backgroundColor: '#FF9800',
-        textColor: '#FFFFFF',
-      });
-      return;
-    }
+    // if (!tempRtmToken.trim()) {
+    //   Snackbar.show({
+    //     text: '⚠️ Input Error - RTM Token untuk messaging harus diisi',
+    //     duration: Snackbar.LENGTH_SHORT,
+    //     backgroundColor: '#FF9800',
+    //     textColor: '#FFFFFF',
+    //   });
+    //   return;
+    // }
 
     // Simpan ke store
     setVideoCallData({
@@ -499,6 +525,12 @@ export default function VerificationVideoCall() {
         setTimeout(() => {
           setVideoCall(false);
           setIsInCall(false);
+
+          // Reset ke default state ketika call berakhir
+          setVideoCallData({
+            isUsingCustom: false,
+          });
+
           router.back();
         }, 0);
       },
@@ -759,21 +791,6 @@ export default function VerificationVideoCall() {
                 placeholder='007eJxT... (dari Agora Console → RTC Token)'
                 value={tempRtcToken}
                 onChangeText={setTempRtcToken}
-                multiline={true}
-                numberOfLines={2}
-                autoCapitalize='none'
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <ThemedText style={styles.inputLabel}>
-                RTM Token (Messaging):
-              </ThemedText>
-              <TextInput
-                style={[styles.actionSheetInput, styles.tokenInput]}
-                placeholder='007eJxT... (dari Agora Console → RTM Token)'
-                value={tempRtmToken}
-                onChangeText={setTempRtmToken}
                 multiline={true}
                 numberOfLines={2}
                 autoCapitalize='none'
