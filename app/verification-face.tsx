@@ -28,7 +28,7 @@ export default function VerificationFace() {
           onPress: () => {
             // Dismiss snackbar and redirect
             Snackbar.dismiss();
-            router.push('/verification-video-call');
+            router.push('/verification-video-call-rtm');
           },
         },
       });
@@ -36,7 +36,7 @@ export default function VerificationFace() {
       // Auto redirect after 3 seconds
       setTimeout(() => {
         Snackbar.dismiss();
-        router.push('/verification-video-call');
+        router.push('/verification-video-call-rtm');
       }, 3000);
     }, 3000);
   };

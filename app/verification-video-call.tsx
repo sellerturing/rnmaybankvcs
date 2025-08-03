@@ -77,7 +77,7 @@ const MemoizedAgoraUIKit = memo(
 );
 
 // Error boundary untuk menangkap error dari Agora
-class AgoraErrorBoundary extends React.Component<
+export class AgoraErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean }
 > {
@@ -408,7 +408,7 @@ export default function VerificationVideoCall() {
     // Validasi input
     if (!tempChannel.trim()) {
       Snackbar.show({
-        text: '⚠️ Input Error - Nama channel harus diisi',
+        text: 'Input Error - Nama channel harus diisi',
         duration: Snackbar.LENGTH_SHORT,
         backgroundColor: '#FF9800',
         textColor: '#FFFFFF',
@@ -418,7 +418,7 @@ export default function VerificationVideoCall() {
 
     if (!tempRtcToken.trim()) {
       Snackbar.show({
-        text: '⚠️ Input Error - RTC Token untuk video call harus diisi',
+        text: 'Input Error - Temp Token harus diisi',
         duration: Snackbar.LENGTH_SHORT,
         backgroundColor: '#FF9800',
         textColor: '#FFFFFF',
@@ -426,15 +426,15 @@ export default function VerificationVideoCall() {
       return;
     }
 
-    if (!tempRtmToken.trim()) {
-      Snackbar.show({
-        text: '⚠️ Input Error - RTM Token untuk messaging harus diisi',
-        duration: Snackbar.LENGTH_SHORT,
-        backgroundColor: '#FF9800',
-        textColor: '#FFFFFF',
-      });
-      return;
-    }
+    // if (!tempRtmToken.trim()) {
+    //   Snackbar.show({
+    //     text: 'Input Error - RTM Token untuk messaging harus diisi',
+    //     duration: Snackbar.LENGTH_SHORT,
+    //     backgroundColor: '#FF9800',
+    //     textColor: '#FFFFFF',
+    //   });
+    //   return;
+    // }
 
     // Simpan ke store
     setVideoCallData({
@@ -731,16 +731,15 @@ export default function VerificationVideoCall() {
         >
           <ThemedView style={styles.actionSheetContent}>
             <ThemedText style={styles.actionSheetTitle}>
-              Input Custom Channel
+              Custom Channel
             </ThemedText>
 
             <ThemedText style={styles.actionSheetMessage}>
-              Masukkan nama channel, RTC token (video call), dan RTM token
-              (messaging)
+              Masukkan nama channel, dan temporary token dari agora console
             </ThemedText>
 
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.inputLabel}>Nama Channel:</ThemedText>
+              <ThemedText style={styles.inputLabel}>Channel Name:</ThemedText>
               <TextInput
                 style={styles.actionSheetInput}
                 placeholder='Masukkan nama channel'
@@ -751,29 +750,12 @@ export default function VerificationVideoCall() {
             </View>
 
             <View style={styles.inputContainer}>
-              <ThemedText style={styles.inputLabel}>
-                RTC Token (Video Call):
-              </ThemedText>
+              <ThemedText style={styles.inputLabel}>Temp Token:</ThemedText>
               <TextInput
                 style={[styles.actionSheetInput, styles.tokenInput]}
-                placeholder='007eJxT... (dari Agora Console → RTC Token)'
+                placeholder='007eJxT... (dari Agora Console → Project→ Temp Token'
                 value={tempRtcToken}
                 onChangeText={setTempRtcToken}
-                multiline={true}
-                numberOfLines={2}
-                autoCapitalize='none'
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <ThemedText style={styles.inputLabel}>
-                RTM Token (Messaging):
-              </ThemedText>
-              <TextInput
-                style={[styles.actionSheetInput, styles.tokenInput]}
-                placeholder='007eJxT... (dari Agora Console → RTM Token)'
-                value={tempRtmToken}
-                onChangeText={setTempRtmToken}
                 multiline={true}
                 numberOfLines={2}
                 autoCapitalize='none'
